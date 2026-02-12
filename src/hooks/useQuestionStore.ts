@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Question } from "@/types/question";
 
 const ARCHIVED_KEY = "interview-archived";
@@ -34,13 +34,26 @@ export function useQuestionStore(allQuestions: Question[]) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [history, setHistory] = useState<Question[]>([]);
 
-  // Filter and shuffle available questions
+  // Track the set of IDs we've already shuffled to avoid re-shuffle on refetch
+  const shuffledIdsRef = useRef<string | null>(null);
+
+  // Filter and shuffle available questions — stabilized by ID set
   useEffect(() => {
     const available = allQuestions.filter(
-      (q) => !archived.has(q.id) && !skipped.has(q.id)
+      (q) => !archived.has(String(q.id)) && !skipped.has(String(q.id))
     );
-    setHistory(shuffle(available));
-    setCurrentIndex(0);
+
+    // Build a stable key from sorted IDs to detect actual data changes
+    const idKey = available
+      .map((q) => q.id)
+      .sort((a, b) => a - b)
+      .join(",");
+
+    if (idKey !== shuffledIdsRef.current) {
+      shuffledIdsRef.current = idKey;
+      setHistory(shuffle(available));
+      setCurrentIndex(0);
+    }
   }, [allQuestions, archived]); // intentionally not depending on skipped to keep session stable
 
   const currentQuestion = history[currentIndex] ?? null;
@@ -53,29 +66,33 @@ export function useQuestionStore(allQuestions: Question[]) {
     setCurrentIndex((i) => Math.max(i - 1, 0));
   }, []);
 
-  const archiveQuestion = useCallback((id: string) => {
+  const archiveQuestion = useCallback((id: number) => {
+    const sid = String(id);
     setArchived((prev) => {
       const next = new Set(prev);
-      next.add(id);
+      next.add(sid);
       saveSet(ARCHIVED_KEY, next);
       return next;
     });
   }, []);
 
-  const skipQuestion = useCallback((id: string) => {
+  const skipQuestion = useCallback((id: number) => {
+    const sid = String(id);
     setSkipped((prev) => {
       const next = new Set(prev);
-      next.add(id);
+      next.add(sid);
       saveSet(SKIPPED_KEY, next);
       return next;
     });
     // Also move to next
-    setHistory((prev) => prev.filter((q) => q.id !== id));
+    setHistory((prev) => prev.filter((q) => String(q.id) !== sid));
   }, []);
 
   const clearSkipped = useCallback(() => {
     localStorage.removeItem(SKIPPED_KEY);
     setSkipped(new Set());
+    // Reset shuffled tracking so next effect re-shuffles with skipped restored
+    shuffledIdsRef.current = null;
   }, []);
 
   const archivedCount = archived.size;

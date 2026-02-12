@@ -233,6 +233,11 @@
     @apply p-2 border-b border-border text-card-foreground/85;
   }
 
+  /* Title inline code */
+  .title-code {
+    @apply bg-orange-500/15 text-orange-300 px-1.5 py-0.5 rounded text-[0.9em] font-mono font-normal;
+  }
+
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 4px;

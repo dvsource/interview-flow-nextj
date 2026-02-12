@@ -29,7 +29,7 @@ export function ActionBar({
         size="icon"
         onClick={onPrev}
         disabled={disabled || isFirst}
-        className="h-11 w-11 rounded-full"
+        className="h-11 w-11 rounded-full border-muted-foreground/40 text-muted-foreground hover:border-amber-400/60 hover:text-amber-300 hover:bg-amber-500/10"
         aria-label="Previous question"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -41,7 +41,7 @@ export function ActionBar({
           size="sm"
           onClick={onSkip}
           disabled={disabled}
-          className="h-11 px-4 rounded-full gap-1.5 text-muted-foreground hover:text-warning"
+          className="h-11 px-4 rounded-full gap-1.5 border-muted-foreground/40 text-muted-foreground hover:border-amber-400/60 hover:text-amber-300 hover:bg-amber-500/10"
           aria-label="Skip question"
         >
           <SkipForward className="h-4 w-4" />
@@ -53,7 +53,7 @@ export function ActionBar({
           size="sm"
           onClick={onArchive}
           disabled={disabled}
-          className="h-11 px-4 rounded-full gap-1.5 text-muted-foreground hover:text-destructive"
+          className="h-11 px-4 rounded-full gap-1.5 border-orange-400/40 bg-orange-500/15 text-orange-300 hover:bg-orange-500/25 hover:border-orange-400/60 hover:text-orange-200"
           aria-label="Archive question"
         >
           <Archive className="h-4 w-4" />
@@ -66,7 +66,7 @@ export function ActionBar({
         size="icon"
         onClick={onNext}
         disabled={disabled || isLast}
-        className="h-11 w-11 rounded-full"
+        className="h-11 w-11 rounded-full bg-amber-500 text-gray-950 hover:bg-amber-400"
         aria-label="Next question"
       >
         <ChevronRight className="h-5 w-5" />
