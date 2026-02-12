@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
 import { Question } from "@/types/question";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +11,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSwipeable } from "react-swipeable";
 import { ChevronRight, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
@@ -28,21 +30,34 @@ interface QuestionCardProps {
   question: Question;
   index: number;
   total: number;
+  direction: 1 | -1;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
 }
 
-export function QuestionCard({ question, index, total }: QuestionCardProps) {
+export function QuestionCard({ question, index, total, direction, onSwipeLeft, onSwipeRight }: QuestionCardProps) {
   const [whyOpen, setWhyOpen] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
 
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => onSwipeLeft?.(),
+    onSwipedRight: () => onSwipeRight?.(),
+    delta: 40,
+    preventScrollOnSwipe: false,
+    trackTouch: true,
+    trackMouse: true,
+  });
+
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={question.id}
-        initial={{ opacity: 0, x: 60 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -60 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        className="flex flex-col h-full"
+    <div {...swipeHandlers} className="flex flex-col h-full">
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={question.id}
+          initial={{ opacity: 0, x: 80 * direction }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -80 * direction }}
+          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+          className="flex flex-col h-full"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-1 mb-4">
@@ -86,7 +101,7 @@ export function QuestionCard({ question, index, total }: QuestionCardProps) {
         {/* Answer - scrollable */}
         <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
           <div className="markdown-content">
-            <ReactMarkdown>{question.answer}</ReactMarkdown>
+            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{question.answer}</ReactMarkdown>
           </div>
 
           {/* Why it's asked - collapsible */}
@@ -101,7 +116,7 @@ export function QuestionCard({ question, index, total }: QuestionCardProps) {
               <CollapsibleContent>
                 <div className="mt-2 pl-3 border-l-2 border-primary/30 text-sm text-muted-foreground">
                   <div className="markdown-content">
-                    <ReactMarkdown>{question.whyImportant}</ReactMarkdown>
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{question.whyImportant}</ReactMarkdown>
                   </div>
                 </div>
               </CollapsibleContent>
@@ -120,7 +135,7 @@ export function QuestionCard({ question, index, total }: QuestionCardProps) {
               <CollapsibleContent>
                 <div className="mt-2 pl-3 border-l-2 border-yellow-500/30 text-sm text-muted-foreground">
                   <div className="markdown-content">
-                    <ReactMarkdown>{question.keyNotes}</ReactMarkdown>
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{question.keyNotes}</ReactMarkdown>
                   </div>
                 </div>
               </CollapsibleContent>
@@ -136,6 +151,7 @@ export function QuestionCard({ question, index, total }: QuestionCardProps) {
           )}
         </div>
       </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </div>
   );
 }

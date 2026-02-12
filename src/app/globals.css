@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "../styles/hljs-everforest.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -209,7 +210,7 @@
     @apply bg-muted rounded-lg p-4 mb-4 overflow-x-auto;
   }
   .markdown-content pre code {
-    @apply bg-transparent p-0;
+    @apply bg-transparent p-0 text-inherit;
   }
   .markdown-content blockquote {
     @apply border-l-4 border-primary/40 pl-4 italic text-muted-foreground mb-3;

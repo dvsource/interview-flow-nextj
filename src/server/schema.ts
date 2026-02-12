@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp } from "drizzle-orm/pg-core";
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
@@ -11,5 +11,12 @@ export const questions = pgTable("questions", {
   keywords: text("keywords").array().notNull().default([]),
   sourceFile: text("source_file").notNull(),
   generatedAt: timestamp("generated_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const questionActions = pgTable("question_actions", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").notNull(),
+  action: text("action").notNull(), // 'archive' | 'skip'
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

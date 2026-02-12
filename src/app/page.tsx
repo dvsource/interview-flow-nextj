@@ -13,6 +13,7 @@ import { BookOpen, Loader2 } from "lucide-react";
 export default function Home() {
   const [selectedTopic, setSelectedTopic] = useState<string | undefined>();
   const [selectedSubtopic, setSelectedSubtopic] = useState<string | undefined>();
+  const [direction, setDirection] = useState<1 | -1>(1);
 
   const filter = useMemo(
     () =>
@@ -50,8 +51,8 @@ export default function Home() {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "d") goNext();
-      if (e.key === "ArrowLeft" || e.key === "a") goPrev();
+      if (e.key === "ArrowRight" || e.key === "d") { setDirection(1); goNext(); }
+      if (e.key === "ArrowLeft" || e.key === "a") { setDirection(-1); goPrev(); }
       if (e.key === "s" && currentQuestion) skipQuestion(currentQuestion.id);
       if (e.key === "x" && currentQuestion) archiveQuestion(currentQuestion.id);
     };
@@ -102,6 +103,9 @@ export default function Home() {
             question={currentQuestion}
             index={currentIndex}
             total={totalAvailable}
+            direction={direction}
+            onSwipeLeft={() => { setDirection(1); goNext(); }}
+            onSwipeRight={() => { setDirection(-1); goPrev(); }}
           />
         ) : (
           <EmptyState
@@ -114,8 +118,8 @@ export default function Home() {
       {/* Bottom actions */}
       {currentQuestion && (
         <ActionBar
-          onPrev={goPrev}
-          onNext={goNext}
+          onPrev={() => { setDirection(-1); goPrev(); }}
+          onNext={() => { setDirection(1); goNext(); }}
           onSkip={() => skipQuestion(currentQuestion.id)}
           onArchive={() => archiveQuestion(currentQuestion.id)}
           isFirst={isFirst}

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { eq, and, count } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc";
 import { getDb } from "../db";
-import { questions } from "../schema";
+import { questions, questionActions } from "../schema";
 
 export const questionsRouter = router({
   getAll: publicProcedure
@@ -44,4 +44,51 @@ export const questionsRouter = router({
       .orderBy(questions.topic, questions.subtopic);
     return rows;
   }),
+
+  getActions: publicProcedure.query(async () => {
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(questionActions)
+      .orderBy(questionActions.id);
+    return rows;
+  }),
+
+  setAction: publicProcedure
+    .input(
+      z.object({
+        questionId: z.number(),
+        action: z.enum(["archive", "skip"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      await db
+        .insert(questionActions)
+        .values({
+          questionId: input.questionId,
+          action: input.action,
+        })
+        .onConflictDoNothing();
+      return { success: true };
+    }),
+
+  removeAction: publicProcedure
+    .input(
+      z.object({
+        questionId: z.number().nullish(),
+        action: z.enum(["archive", "skip"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = getDb();
+      const conditions = [eq(questionActions.action, input.action)];
+      if (input.questionId != null) {
+        conditions.push(eq(questionActions.questionId, input.questionId));
+      }
+      await db
+        .delete(questionActions)
+        .where(and(...conditions));
+      return { success: true };
+    }),
 });
