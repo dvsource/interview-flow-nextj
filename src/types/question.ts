@@ -5,6 +5,7 @@ export interface Question {
   id: number;
   topic: string;
   subtopic: string | null;
+  summary: string;
   question: string;
   whyImportant: string;
   answer: string;

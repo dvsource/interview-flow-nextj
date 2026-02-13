@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, sql } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc";
 import { getDb } from "../db";
 import { questions, questionActions } from "../schema";
@@ -28,6 +28,48 @@ export const questionsRouter = router({
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(questions.id);
       return rows;
+    }),
+
+  getPaginated: publicProcedure
+    .input(
+      z.object({
+        seed: z.number().int(),
+        page: z.number().int().min(0),
+        pageSize: z.number().int().min(1).max(50).default(10),
+        topic: z.string().nullish(),
+        subtopic: z.string().nullish(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = getDb();
+      const { seed, page, pageSize } = input;
+
+      const conditions = [];
+      if (input.topic) conditions.push(eq(questions.topic, input.topic));
+      if (input.subtopic) conditions.push(eq(questions.subtopic, input.subtopic));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(questions)
+        .where(whereClause);
+
+      const rows = await db
+        .select()
+        .from(questions)
+        .where(whereClause)
+        .orderBy(sql`md5(${questions.id}::text || ${seed}::text)`)
+        .limit(pageSize)
+        .offset(page * pageSize);
+
+      const totalCount = Number(total);
+      return {
+        questions: rows,
+        totalCount,
+        page,
+        pageSize,
+        hasMore: (page + 1) * pageSize < totalCount,
+      };
     }),
 
   getTopics: publicProcedure.query(async () => {

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
-import type { Question } from "@/types/question";
 import { useQuestionStore } from "@/hooks/useQuestionStore";
 import { QuestionCard } from "@/components/QuestionCard";
 import { ActionBar } from "@/components/ActionBar";
@@ -23,16 +22,9 @@ export default function Home() {
     [selectedTopic, selectedSubtopic]
   );
 
-  const questionsQuery = trpc.questions.getAll.useQuery(filter, {
-    staleTime: 5 * 60 * 1000,
-  });
-
   const topicsQuery = trpc.questions.getTopics.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   });
-
-  // tRPC v11 may return non-array data shapes — guard with Array.isArray
-  const questions = (Array.isArray(questionsQuery.data) ? questionsQuery.data : []) as Question[];
 
   const {
     currentQuestion,
@@ -41,12 +33,13 @@ export default function Home() {
     archivedCount,
     isFirst,
     isLast,
+    isLoading,
     goNext,
     goPrev,
     archiveQuestion,
     skipQuestion,
     clearSkipped,
-  } = useQuestionStore(questions);
+  } = useQuestionStore(filter);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -84,19 +77,10 @@ export default function Home() {
 
       {/* Main card area */}
       <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-5 shadow-sm">
-        {questionsQuery.isLoading ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
             <p className="text-sm text-muted-foreground">Loading questions...</p>
-          </div>
-        ) : questionsQuery.isError ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-6">
-            <p className="text-sm text-destructive font-medium">
-              Failed to load questions
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {questionsQuery.error.message}
-            </p>
           </div>
         ) : currentQuestion ? (
           <QuestionCard

@@ -7,6 +7,10 @@ function handler(req: Request) {
     req,
     router: appRouter,
     createContext: () => ({}),
+    onError: ({ error, path }) => {
+      console.error(`[tRPC] ${path}:`, error.message);
+      if (error.cause) console.error(`[tRPC] cause:`, error.cause);
+    },
   });
 }
 

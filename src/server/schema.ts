@@ -4,6 +4,7 @@ export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
   topic: text("topic").notNull(),
   subtopic: text("subtopic"),
+  summary: text("summary").notNull(),
   question: text("question").notNull(),
   whyImportant: text("why_important").notNull(),
   answer: text("answer").notNull(),
