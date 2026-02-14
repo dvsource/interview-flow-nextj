@@ -1,0 +1,808 @@
+
+╭─── Claude Code v2.1.38 ──────────────────────────────────────────────────────╮
+│                                                   │ Tips for getting started │
+│                Welcome back Viraj!                │ Run /init to create a C… │
+│                                                   │ ──────────────────────── │
+│                      ▐▛███▜▌                      │ Recent activity          │
+│                     ▝▜█████▛▘                     │ No recent activity       │
+│                       ▘▘ ▝▝                       │                          │
+│                                                   │                          │
+│               Opus 4.6 · Claude Max               │                          │
+│   ~/…/jobhunting2026/apps/interview-flow-nextjs   │                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ Plan to implement                                                            │
+│                                                                              │
+│ Plan: Background Pagination for Questions                                    │
+│                                                                              │
+│ Context                                                                      │
+│                                                                              │
+│ The app loads all ~687 questions in one getAll tRPC call, then shuffles      │
+│ client-side. This works but fetches far more data than needed upfront. We    │
+│ want to load questions 10 at a time with seamless prefetching so the user    │
+│ never waits, while still showing the correct total count (e.g. "5 / 687").   │
+│                                                                              │
+│ Approach: Server-Side Seeded Random Order + Offset Pagination                │
+│                                                                              │
+│ Core idea: The server provides a deterministic random ordering using ORDER   │
+│ BY md5(id::text || seed::text). The client generates a random seed once per  │
+│ session and requests pages of 10. Same seed = same ordering = stable         │
+│ pagination. New session = new seed = fresh shuffle.                          │
+│                                                                              │
+│ Archive/skip filtering: Done client-side after fetch (keeps query cache keys │
+│  stable). Server returns all non-filtered questions; client strips out       │
+│ archived/skipped locally.                                                    │
+│                                                                              │
+│ Files to Change                                                              │
+│ File: src/server/routers/questions.ts                                        │
+│ Change: Add getPaginated procedure (seeded ordering, offset pagination,      │
+│ total                                                                        │
+│   count)                                                                     │
+│ ────────────────────────────────────────                                     │
+│ File: src/hooks/useQuestionStore.ts                                          │
+│ Change: Major rewrite — owns tRPC queries internally, accumulates pages,     │
+│   prefetches                                                                 │
+│ ────────────────────────────────────────                                     │
+│ File: src/app/page.tsx                                                       │
+│ Change: Pass filter to hook instead of pre-fetched array; use                │
+│   isLoading/totalCount from hook                                             │
+│ No new files. No new packages. QuestionCard, ActionBar, EmptyState           │
+│ unchanged.                                                                   │
+│                                                                              │
+│ ---                                                                          │
+│ Step 1 — Add getPaginated procedure                                          │
+│                                                                              │
+│ File: src/server/routers/questions.ts                                        │
+│                                                                              │
+│ Add sql and count imports from drizzle-orm. New procedure:                   │
+│                                                                              │
+│ Input: { seed: number, page: number, pageSize: number (default 10),          │
+│          topic?: string, subtopic?: string }                                 │
+│                                                                              │
+│ Output: { questions: Question[], totalCount: number, page: number,           │
+│           pageSize: number, hasMore: boolean }                               │
+│                                                                              │
+│ SQL logic:                                                                   │
+│ - Build WHERE from topic/subtopic filters (same as existing getAll)          │
+│ - totalCount: SELECT count(*) FROM questions WHERE ...                       │
+│ - Questions: SELECT * FROM questions WHERE ... ORDER BY md5(id::text ||      │
+│ seed::text) LIMIT pageSize OFFSET page * pageSize                            │
+│ - hasMore: (page + 1) * pageSize < totalCount                                │
+│                                                                              │
+│ Keep existing getAll procedure intact (no breaking changes).                 │
+│                                                                              │
+│ Step 2 — Rewrite useQuestionStore hook                                       │
+│                                                                              │
+│ File: src/hooks/useQuestionStore.ts                                          │
+│                                                                              │
+│ New signature:                                                               │
+│ useQuestionStore(filter: { topic?: string; subtopic?: string } | undefined)  │
+│                                                                              │
+│ The hook now owns the tRPC query internally instead of receiving a           │
+│ pre-fetched array.                                                           │
+│                                                                              │
+│ Key internals:                                                               │
+│ State: seed (useState, from sessionStorage)                                  │
+│ Purpose: Random int, persists for browser session                            │
+│ ────────────────────────────────────────                                     │
+│ State: currentPage                                                           │
+│ Purpose: Which page to fetch next (0-indexed)                                │
+│ ────────────────────────────────────────                                     │
+│ State: loadedQuestions: Question[]                                           │
+│ Purpose: Accumulated questions across all fetched pages                      │
+│ ────────────────────────────────────────                                     │
+│ State: globalIndex                                                           │
+│ Purpose: User's position in loadedQuestions                                  │
+│ ────────────────────────────────────────                                     │
+│ State: totalCount                                                            │
+│ Purpose: From server, displayed as denominator                               │
+│ ────────────────────────────────────────                                     │
+│ State: hasMore                                                               │
+│ Purpose: Whether more pages exist                                            │
+│ ────────────────────────────────────────                                     │
+│ State: loadedPagesRef: Set<number>                                           │
+│ Purpose: Tracks which pages we've appended (prevents double-append)          │
+│ ────────────────────────────────────────                                     │
+│ State: archived / skipped                                                    │
+│ Purpose: Same as today (localStorage + DB sync)                              │
+│ Seed generation — helper using sessionStorage:                               │
+│ function getSessionSeed(): number {                                          │
+│   const stored = sessionStorage.getItem("interview-seed");                   │
+│   if (stored) return Number(stored);                                         │
+│   const seed = Math.floor(Math.random() * 2147483647);                       │
+│   sessionStorage.setItem("interview-seed", String(seed));                    │
+│   return seed;                                                               │
+│ }                                                                            │
+│                                                                              │
+│ Page fetching:                                                               │
+│ - trpc.questions.getPaginated.useQuery(...) fetches currentPage              │
+│ - enabled: !loadedPagesRef.current.has(currentPage) prevents re-fetching     │
+│ known pages                                                                  │
+│ - On data arrival: append questions to loadedQuestions, update               │
+│ totalCount/hasMore                                                           │
+│                                                                              │
+│ Client-side archive/skip filtering:                                          │
+│ - Filter out archived/skipped IDs from loadedQuestions when computing        │
+│ visibleQuestions                                                             │
+│ - Display total: totalCount - archived.size (archived excluded from          │
+│ denominator)                                                                 │
+│ - Skipped not subtracted from total (session-only, they reappear on refresh) │
+│                                                                              │
+│ Prefetch logic:                                                              │
+│ - When globalIndex >= visibleQuestions.length - 3 AND hasMore: prefetch next │
+│  page via utils.questions.getPaginated.prefetch(...)                         │
+│ - When user actually reaches the last loaded question: advance currentPage   │
+│ to trigger the real fetch (cache-hit from prefetch)                          │
+│                                                                              │
+│ Navigation:                                                                  │
+│ - goNext: increment globalIndex, trigger page advance if at boundary         │
+│ - goPrev: decrement globalIndex (min 0)                                      │
+│ - isLast: globalIndex >= visibleQuestions.length - 1 && !hasMore             │
+│                                                                              │
+│ Reset on filter change:                                                      │
+│ - useEffect watching filter.topic/filter.subtopic clears all pagination      │
+│ state, resets to page 0                                                      │
+│                                                                              │
+│ Archive action: Remove from loadedQuestions, decrement totalCount locally,   │
+│ adjust globalIndex if needed, fire DB mutation (same as today).              │
+│                                                                              │
+│ Skip action: Remove from loadedQuestions via skipped set, fire DB mutation   │
+│ (same as today).                                                             │
+│                                                                              │
+│ Clear skipped: Reset all pagination state to page 0 (skipped questions       │
+│ re-enter the pool).                                                          │
+│                                                                              │
+│ Remove: shuffle() function, shuffledIdsRef — no longer needed (server        │
+│ handles ordering).                                                           │
+│                                                                              │
+│ New export: isLoading (true when first page is in-flight and loadedQuestions │
+│  is empty).                                                                  │
+│                                                                              │
+│ Step 3 — Update page.tsx                                                     │
+│                                                                              │
+│ File: src/app/page.tsx                                                       │
+│                                                                              │
+│ - Remove trpc.questions.getAll.useQuery(filter) and the Array.isArray guard  │
+│ - Change: useQuestionStore(questions) → useQuestionStore(filter)             │
+│ - Destructure new isLoading and totalCount from hook                         │
+│ - Use isLoading for the loading spinner (replaces questionsQuery.isLoading)  │
+│ - topicsQuery stays unchanged                                                │
+│                                                                              │
+│ Edge Cases                                                                   │
+│                                                                              │
+│ - Filter change mid-pagination: All state resets, page 0 of new filter       │
+│ fetched                                                                      │
+│ - Rapid navigation past loaded data: isLast prevents going past loaded       │
+│ questions; prefetch at position -3 should prevent this in practice. Safety:  │
+│ show brief inline loader if at boundary and still fetching                   │
+│ - tRPC data shape quirk: Guard with Array.isArray(data?.questions) per       │
+│ MEMORY.md                                                                    │
+│ - Cache stability: No excludeIds in query params → cache keys are {seed,     │
+│ page, pageSize, topic, subtopic} only → archive/skip don't invalidate cache  │
+│ - Seed in PostgreSQL: md5() accepts text, int32 range is safe                │
+│                                                                              │
+│ Verification                                                                 │
+│                                                                              │
+│ 1. npm run build — no errors                                                 │
+│ 2. Dev server: first 10 questions load, counter shows "1 / 687"              │
+│ 3. Navigate to question 8 → network tab shows prefetch for page 1            │
+│ 4. Navigate past question 10 → seamless transition, no loading gap           │
+│ 5. Archive a question → removed instantly, counter decrements                │
+│ 6. Change topic filter → resets to question 1 of new topic                   │
+│ 7. Refresh browser → new seed, different shuffle order                       │
+│ 8. Same browser session (no refresh) → same seed, same order                 │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+● I'll start by reading the three files that need to be modified to understand
+  the current implementation.
+
+● Read 3 files (ctrl+o to expand)
+
+● Let me also check the schema and tRPC client setup for reference.
+
+● Read 3 files (ctrl+o to expand)
+
+● Let me check the Question type and the app router.
+
+● Read 2 files (ctrl+o to expand)
+
+● Good, I have full context now. Let me also check the drizzle-orm sql import to
+   confirm how to do raw SQL with the Neon/Drizzle setup.
+
+● Searched for 1 pattern (ctrl+o to expand)
+
+● Now let me create the task list and start implementing.
+
+● Step 1 — Adding getPaginated procedure
+
+● Update(src/server/routers/questions.ts)
+  ⎿  Added 1 line, removed 1 line
+      1  import { z } from "zod";
+      2 -import { eq, and, count } from "drizzle-orm";                   
+      2 +import { eq, and, count, sql } from "drizzle-orm";              
+      3  import { router, publicProcedure } from "../trpc";
+      4  import { getDb } from "../db";
+      5  import { questions, questionActions } from "../schema";
+
+● Now add the getPaginated procedure after the getAll procedure:
+
+● Update(src/server/routers/questions.ts)
+  ⎿  Added 42 lines
+      30        return rows;
+      31      }),
+      32 
+      33 +  getPaginated: publicProcedure                                
+      34 +    .input(                                                    
+      35 +      z.object({                                               
+      36 +        seed: z.number().int(),                                
+      37 +        page: z.number().int().min(0),                         
+      38 +        pageSize: z.number().int().min(1).max(50).default(10), 
+      39 +        topic: z.string().nullish(),                           
+      40 +        subtopic: z.string().nullish(),                        
+      41 +      })                                                       
+      42 +    )                                                          
+      43 +    .query(async ({ input }) => {                              
+      44 +      const db = getDb();                                      
+      45 +      const { seed, page, pageSize } = input;                  
+      46 +                                                               
+      47 +      const conditions = [];                                   
+      48 +      if (input.topic) conditions.push(eq(questions.topic, inpu
+         +t.topic));                                                     
+      49 +      if (input.subtopic) conditions.push(eq(questions.subtopic
+         +, input.subtopic));                                            
+      50 +      const whereClause = conditions.length > 0 ? and(...condit
+         +ions) : undefined;                                             
+      51 +                                                               
+      52 +      const [{ total }] = await db                             
+      53 +        .select({ total: count() })                            
+      54 +        .from(questions)                                       
+      55 +        .where(whereClause);                                   
+      56 +                                                               
+      57 +      const rows = await db                                    
+      58 +        .select()                                              
+      59 +        .from(questions)                                       
+      60 +        .where(whereClause)                                    
+      61 +        .orderBy(sql`md5(${questions.id}::text || ${seed}::text
+         +)`)                                                            
+      62 +        .limit(pageSize)                                       
+      63 +        .offset(page * pageSize);                              
+      64 +                                                               
+      65 +      const totalCount = Number(total);                        
+      66 +      return {                                                 
+      67 +        questions: rows,                                       
+      68 +        totalCount,                                            
+      69 +        page,                                                  
+      70 +        pageSize,                                              
+      71 +        hasMore: (page + 1) * pageSize < totalCount,           
+      72 +      };                                                       
+      73 +    }),                                                        
+      74 +                                                               
+      75    getTopics: publicProcedure.query(async () => {
+      76      const db = getDb();
+      77 
+
+● Step 2 — Rewriting useQuestionStore hook
+
+● Write(src/hooks/useQuestionStore.ts)
+  ⎿  Added 172 lines, removed 64 lines
+       1  "use client";
+       2 
+       3 -import { useState, useCallback, useEffect, useRef } from "react
+         -";                                                             
+       3 +import { useState, useCallback, useEffect, useRef, useMemo } fr
+         +om "react";                                                    
+       4  import { Question } from "@/types/question";
+       5  import { trpc } from "@/lib/trpc";
+       6 
+       7  const ARCHIVED_KEY = "interview-archived";
+       8  const SKIPPED_KEY = "interview-skipped";
+       9 +const SEED_KEY = "interview-seed";                             
+      10 
+      11  function loadSet(key: string): Set<string> {
+      12    try {
+     ...
+      21    localStorage.setItem(key, JSON.stringify([...set]));
+      22  }
+      23 
+      23 -function shuffle<T>(arr: T[]): T[] {                           
+      24 -  const copy = [...arr];                                       
+      25 -  for (let i = copy.length - 1; i > 0; i--) {                  
+      26 -    const j = Math.floor(Math.random() * (i + 1));             
+      27 -    [copy[i], copy[j]] = [copy[j], copy[i]];                   
+      24 +function getSessionSeed(): number {                            
+      25 +  try {                                                        
+      26 +    const stored = sessionStorage.getItem(SEED_KEY);           
+      27 +    if (stored) return Number(stored);                         
+      28 +  } catch {                                                    
+      29 +    // SSR or sessionStorage unavailable                       
+      30    }
+      29 -  return copy;                                                 
+      31 +  const seed = Math.floor(Math.random() * 2147483647);         
+      32 +  try {                                                        
+      33 +    sessionStorage.setItem(SEED_KEY, String(seed));            
+      34 +  } catch {                                                    
+      35 +    // ignore                                                  
+      36 +  }                                                            
+      37 +  return seed;                                                 
+      38  }
+      39 
+      32 -export function useQuestionStore(allQuestions: Question[]) {   
+      40 +export function useQuestionStore(                              
+      41 +  filter: { topic?: string; subtopic?: string } | undefined    
+      42 +) {                                                            
+      43 +  const [seed] = useState(() => getSessionSeed());             
+      44 +  const [currentPage, setCurrentPage] = useState(0);           
+      45 +  const [loadedQuestions, setLoadedQuestions] = useState<Questi
+         +on[]>([]);                                                     
+      46 +  const [globalIndex, setGlobalIndex] = useState(0);           
+      47 +  const [totalCount, setTotalCount] = useState(0);             
+      48 +  const [hasMore, setHasMore] = useState(true);                
+      49 +                                                               
+      50    const [archived, setArchived] = useState<Set<string>>(() => l
+          oadSet(ARCHIVED_KEY));
+      51    const [skipped, setSkipped] = useState<Set<string>>(new Set()
+          );
+      35 -  const [currentIndex, setCurrentIndex] = useState(0);         
+      36 -  const [history, setHistory] = useState<Question[]>([]);      
+      52 
+      38 -  // Track the set of IDs we've already shuffled to avoid re-sh
+         -uffle on refetch                                               
+      39 -  const shuffledIdsRef = useRef<string | null>(null);          
+      53 +  const loadedPagesRef = useRef<Set<number>>(new Set());       
+      54    const dbSyncedRef = useRef(false);
+      55 +  const filterRef = useRef(filter);                            
+      56 
+      42 -  // tRPC queries & mutations                                  
+      43 -  const actionsQuery = trpc.questions.getActions.useQuery();   
+      57 +  // tRPC mutations                                            
+      58    const setActionMut = trpc.questions.setAction.useMutation();
+      59    const removeActionMut = trpc.questions.removeAction.useMutati
+          on();
+      60 +  const actionsQuery = trpc.questions.getActions.useQuery();   
+      61 
+      62 +  // tRPC utils for prefetching                                
+      63 +  const utils = trpc.useUtils();                               
+      64 +                                                               
+      65    // DB sync on mount — merge DB archive rows into localStorage
+          , clear skipped
+      66    useEffect(() => {
+      67      if (dbSyncedRef.current) return;
+     ...
+       89      }
+       90    }, [actionsQuery.data]);
+       91 
+       74 -  // Filter and shuffle available questions — stabilized by ID
+          - set                                                          
+       92 +  // Reset all pagination state when filter changes           
+       93    useEffect(() => {
+       76 -    const available = allQuestions.filter(                    
+       77 -      (q) => !archived.has(String(q.id)) && !skipped.has(Strin
+          -g(q.id))                                                      
+       78 -    );                                                        
+       94 +    const prev = filterRef.current;                           
+       95 +    const topicChanged = prev?.topic !== filter?.topic;       
+       96 +    const subtopicChanged = prev?.subtopic !== filter?.subtopi
+          +c;                                                            
+       97 +    filterRef.current = filter;                               
+       98 
+       80 -    // Build a stable key from sorted IDs to detect actual dat
+          -a changes                                                     
+       81 -    const idKey = available                                   
+       82 -      .map((q) => q.id)                                       
+       83 -      .sort((a, b) => a - b)                                  
+       84 -      .join(",");                                             
+       99 +    if (topicChanged || subtopicChanged) {                    
+      100 +      loadedPagesRef.current = new Set();                     
+      101 +      setLoadedQuestions([]);                                 
+      102 +      setGlobalIndex(0);                                      
+      103 +      setCurrentPage(0);                                      
+      104 +      setTotalCount(0);                                       
+      105 +      setHasMore(true);                                       
+      106 +    }                                                         
+      107 +  }, [filter?.topic, filter?.subtopic]);                      
+      108 
+       86 -    if (idKey !== shuffledIdsRef.current) {                   
+       87 -      shuffledIdsRef.current = idKey;                         
+       88 -      setHistory(shuffle(available));                         
+       89 -      setCurrentIndex(0);                                     
+      109 +  // Fetch current page                                       
+      110 +  const pageQuery = trpc.questions.getPaginated.useQuery(     
+      111 +    {                                                         
+      112 +      seed,                                                   
+      113 +      page: currentPage,                                      
+      114 +      pageSize: 10,                                           
+      115 +      topic: filter?.topic,                                   
+      116 +      subtopic: filter?.subtopic,                             
+      117 +    },                                                        
+      118 +    {                                                         
+      119 +      staleTime: 5 * 60 * 1000,                               
+      120 +      enabled: !loadedPagesRef.current.has(currentPage),      
+      121      }
+       91 -  }, [allQuestions, archived]); // intentionally not depending
+          - on skipped to keep session stable                            
+      122 +  );                                                          
+      123 
+       93 -  const currentQuestion = history[currentIndex] ?? null;      
+      124 +  // Append new page data when it arrives                     
+      125 +  useEffect(() => {                                           
+      126 +    const data = pageQuery.data;                              
+      127 +    if (!data || !Array.isArray(data.questions)) return;      
+      128 +    if (loadedPagesRef.current.has(data.page)) return;        
+      129 
+      130 +    loadedPagesRef.current.add(data.page);                    
+      131 +    setLoadedQuestions((prev) => [...prev, ...(data.questions 
+          +as Question[])]);                                             
+      132 +    setTotalCount(data.totalCount);                           
+      133 +    setHasMore(data.hasMore);                                 
+      134 +  }, [pageQuery.data]);                                       
+      135 +                                                              
+      136 +  // Visible questions: filter out archived and skipped       
+      137 +  const visibleQuestions = useMemo(                           
+      138 +    () =>                                                     
+      139 +      loadedQuestions.filter(                                 
+      140 +        (q) => !archived.has(String(q.id)) && !skipped.has(Str
+          +ing(q.id))                                                    
+      141 +      ),                                                      
+      142 +    [loadedQuestions, archived, skipped]                      
+      143 +  );                                                          
+      144 +                                                              
+      145 +  const currentQuestion = visibleQuestions[globalIndex] ?? nul
+          +l;                                                            
+      146 +  const displayTotal = Math.max(0, totalCount - archived.size)
+          +;                                                             
+      147 +                                                              
+      148 +  // Prefetch next page when user is near the end of loaded qu
+          +estions                                                       
+      149 +  useEffect(() => {                                           
+      150 +    if (!hasMore) return;                                     
+      151 +    const remainingVisible = visibleQuestions.length - globalI
+          +ndex - 1;                                                     
+      152 +    if (remainingVisible <= 3) {                              
+      153 +      const nextPage = currentPage + 1;                       
+      154 +      if (!loadedPagesRef.current.has(nextPage)) {            
+      155 +        utils.questions.getPaginated.prefetch({               
+      156 +          seed,                                               
+      157 +          page: nextPage,                                     
+      158 +          pageSize: 10,                                       
+      159 +          topic: filter?.topic,                               
+      160 +          subtopic: filter?.subtopic,                         
+      161 +        });                                                   
+      162 +      }                                                       
+      163 +    }                                                         
+      164 +  }, [globalIndex, visibleQuestions.length, hasMore, currentPa
+          +ge, seed, filter, utils]);                                    
+      165 +                                                              
+      166 +  // Auto-advance to next page when user reaches the end of lo
+          +aded visible questions                                        
+      167 +  useEffect(() => {                                           
+      168 +    if (!hasMore) return;                                     
+      169 +    if (visibleQuestions.length === 0) return;                
+      170 +    if (globalIndex >= visibleQuestions.length - 1) {         
+      171 +      const nextPage = currentPage + 1;                       
+      172 +      if (!loadedPagesRef.current.has(nextPage)) {            
+      173 +        setCurrentPage(nextPage);                             
+      174 +      }                                                       
+      175 +    }                                                         
+      176 +  }, [globalIndex, visibleQuestions.length, hasMore, currentPa
+          +ge]);                                                         
+      177 +                                                              
+      178    const goNext = useCallback(() => {
+       96 -    setCurrentIndex((i) => Math.min(i + 1, history.length - 1)
+          -);                                                            
+       97 -  }, [history.length]);                                       
+      179 +    setGlobalIndex((i) => {                                   
+      180 +      const maxIdx = visibleQuestions.length - 1;             
+      181 +      return Math.min(i + 1, maxIdx);                         
+      182 +    });                                                       
+      183 +  }, [visibleQuestions.length]);                              
+      184 
+      185    const goPrev = useCallback(() => {
+      100 -    setCurrentIndex((i) => Math.max(i - 1, 0));               
+      186 +    setGlobalIndex((i) => Math.max(i - 1, 0));                
+      187    }, []);
+      188 
+      103 -  const archiveQuestion = useCallback((id: number) => {       
+      104 -    const sid = String(id);                                   
+      105 -    setArchived((prev) => {                                   
+      106 -      const next = new Set(prev);                             
+      107 -      next.add(sid);                                          
+      108 -      saveSet(ARCHIVED_KEY, next);                            
+      109 -      return next;                                            
+      110 -    });                                                       
+      111 -    // Fire-and-forget DB mutation                            
+      112 -    setActionMut.mutate({ questionId: id, action: "archive" })
+          -;                                                             
+      113 -  }, [setActionMut]);                                         
+      189 +  const archiveQuestion = useCallback(                        
+      190 +    (id: number) => {                                         
+      191 +      const sid = String(id);                                 
+      192 +      setArchived((prev) => {                                 
+      193 +        const next = new Set(prev);                           
+      194 +        next.add(sid);                                        
+      195 +        saveSet(ARCHIVED_KEY, next);                          
+      196 +        return next;                                          
+      197 +      });                                                     
+      198 +      // Adjust globalIndex if the archived question is before
+          + or at current position                                       
+      199 +      setGlobalIndex((i) => {                                 
+      200 +        const idx = visibleQuestions.findIndex((q) => q.id ===
+          + id);                                                         
+      201 +        if (idx !== -1 && idx < i) return Math.max(0, i - 1); 
+      202 +        // If archiving the current question and it's the last
+          + visible, step back                                           
+      203 +        if (idx === i && i >= visibleQuestions.length - 1) ret
+          +urn Math.max(0, i - 1);                                       
+      204 +        return i;                                             
+      205 +      });                                                     
+      206 +      setActionMut.mutate({ questionId: id, action: "archive" 
+          +});                                                           
+      207 +    },                                                        
+      208 +    [setActionMut, visibleQuestions]                          
+      209 +  );                                                          
+      210 
+      115 -  const skipQuestion = useCallback((id: number) => {          
+      116 -    const sid = String(id);                                   
+      117 -    setSkipped((prev) => {                                    
+      118 -      const next = new Set(prev);                             
+      119 -      next.add(sid);                                          
+      120 -      saveSet(SKIPPED_KEY, next);                             
+      121 -      return next;                                            
+      122 -    });                                                       
+      123 -    // Also move to next                                      
+      124 -    setHistory((prev) => prev.filter((q) => String(q.id) !== s
+          -id));                                                         
+      125 -    // Fire-and-forget DB mutation (historical record)        
+      126 -    setActionMut.mutate({ questionId: id, action: "skip" });  
+      127 -  }, [setActionMut]);                                         
+      211 +  const skipQuestion = useCallback(                           
+      212 +    (id: number) => {                                         
+      213 +      const sid = String(id);                                 
+      214 +      setSkipped((prev) => {                                  
+      215 +        const next = new Set(prev);                           
+      216 +        next.add(sid);                                        
+      217 +        saveSet(SKIPPED_KEY, next);                           
+      218 +        return next;                                          
+      219 +      });                                                     
+      220 +      // Adjust globalIndex similarly to archive              
+      221 +      setGlobalIndex((i) => {                                 
+      222 +        const idx = visibleQuestions.findIndex((q) => q.id ===
+          + id);                                                         
+      223 +        if (idx !== -1 && idx < i) return Math.max(0, i - 1); 
+      224 +        if (idx === i && i >= visibleQuestions.length - 1) ret
+          +urn Math.max(0, i - 1);                                       
+      225 +        return i;                                             
+      226 +      });                                                     
+      227 +      setActionMut.mutate({ questionId: id, action: "skip" });
+      228 +    },                                                        
+      229 +    [setActionMut, visibleQuestions]                          
+      230 +  );                                                          
+      231 
+      232    const clearSkipped = useCallback(() => {
+      233      localStorage.removeItem(SKIPPED_KEY);
+      234      setSkipped(new Set());
+      132 -    // Reset shuffled tracking so next effect re-shuffles with
+          - skipped restored                                             
+      133 -    shuffledIdsRef.current = null;                            
+      134 -    // Fire-and-forget bulk delete of skip rows               
+      235 +    // Reset pagination — skipped questions re-enter the pool 
+          +from server                                                   
+      236 +    loadedPagesRef.current = new Set();                       
+      237 +    setLoadedQuestions([]);                                   
+      238 +    setGlobalIndex(0);                                        
+      239 +    setCurrentPage(0);                                        
+      240 +    setTotalCount(0);                                         
+      241 +    setHasMore(true);                                         
+      242      removeActionMut.mutate({ questionId: null, action: "skip"
+           });
+      243    }, [removeActionMut]);
+      244 
+      245 +  const isFirst = globalIndex === 0;                          
+      246 +  const isLast = globalIndex >= visibleQuestions.length - 1 &&
+          + !hasMore;                                                    
+      247 +  const isLoading = pageQuery.isLoading && loadedQuestions.len
+          +gth === 0;                                                    
+      248    const archivedCount = archived.size;
+      139 -  const totalAvailable = history.length;                      
+      140 -  const isFirst = currentIndex === 0;                         
+      141 -  const isLast = currentIndex >= history.length - 1;          
+      249 
+      250    return {
+      251      currentQuestion,
+      145 -    currentIndex,                                             
+      146 -    totalAvailable,                                           
+      252 +    currentIndex: globalIndex,                                
+      253 +    totalAvailable: displayTotal,                             
+      254      archivedCount,
+      255      isFirst,
+      256      isLast,
+      257 +    isLoading,                                                
+      258      goNext,
+      259      goPrev,
+      260      archiveQuestion,
+
+● Step 3 — Update page.tsx
+
+● Update(src/app/page.tsx)
+  ⎿  Removed 1 line
+      2 
+      3  import { useEffect, useState, useMemo } from "react";
+      4  import { trpc } from "@/lib/trpc";
+      5 -import type { Question } from "@/types/question";               
+      5  import { useQuestionStore } from "@/hooks/useQuestionStore";
+      6  import { QuestionCard } from "@/components/QuestionCard";
+      7  import { ActionBar } from "@/components/ActionBar";
+
+● Now remove the getAll query and update the hook call:
+
+● Update(src/app/page.tsx)
+  ⎿  Added 2 lines, removed 8 lines
+      22      [selectedTopic, selectedSubtopic]
+      23    );
+      24 
+      25 -  const questionsQuery = trpc.questions.getAll.useQuery(filter,
+         - {                                                             
+      26 -    staleTime: 5 * 60 * 1000,                                  
+      27 -  });                                                          
+      28 -                                                               
+      25    const topicsQuery = trpc.questions.getTopics.useQuery(undefin
+          ed, {
+      26      staleTime: 5 * 60 * 1000,
+      27    });
+      28 
+      33 -  // tRPC v11 may return non-array data shapes — guard with Arr
+         -ay.isArray                                                     
+      34 -  const questions = (Array.isArray(questionsQuery.data) ? quest
+         -ionsQuery.data : []) as Question[];                            
+      35 -                                                               
+      29    const {
+      30      currentQuestion,
+      31      currentIndex,
+     ...
+      33      archivedCount,
+      34      isFirst,
+      35      isLast,
+      36 +    isLoading,                                                 
+      37      goNext,
+      38      goPrev,
+      39      archiveQuestion,
+      40      skipQuestion,
+      41      clearSkipped,
+      48 -  } = useQuestionStore(questions);                             
+      42 +  } = useQuestionStore(filter);                                
+      43 
+      44    // Keyboard shortcuts
+      45    useEffect(() => {
+
+● Now update the loading/error state to use isLoading from the hook instead of
+  questionsQuery:
+
+● Update(src/app/page.tsx)
+  ⎿  Added 1 line, removed 10 lines
+      77 
+      78        {/* Main card area */}
+      79        <main className="flex-1 min-h-0 flex flex-col bg-card rou
+          nded-2xl border border-border p-5 shadow-sm">
+      80 -        {questionsQuery.isLoading ? (                          
+      80 +        {isLoading ? (                                         
+      81            <div className="flex flex-col items-center justify-ce
+          nter h-full gap-3">
+      82              <Loader2 className="h-8 w-8 text-primary animate-sp
+          in" />
+      83              <p className="text-sm text-muted-foreground">Loadin
+          g questions...</p>
+      84            </div>
+      85 -        ) : questionsQuery.isError ? (                         
+      86 -          <div className="flex flex-col items-center justify-ce
+         -nter h-full gap-3 text-center px-6">                           
+      87 -            <p className="text-sm text-destructive font-medium"
+         ->                                                              
+      88 -              Failed to load questions                         
+      89 -            </p>                                               
+      90 -            <p className="text-xs text-muted-foreground">      
+      91 -              {questionsQuery.error.message}                   
+      92 -            </p>                                               
+      93 -          </div>                                               
+      85          ) : currentQuestion ? (
+      86            <QuestionCard
+      87              question={currentQuestion}
+
+● Let me verify the final state of all three files before building.
+
+● Read 2 files (ctrl+o to expand)
+
+● Files look good. Now let's build.
+
+● Bash(cd
+      /home/vfourkeight/Work/dvsource/jobhunting2026/apps/interview-flow-nextjs
+      && npm run build 2>&1)
+  ⎿  > interview-flow-nextjs@0.1.0 build
+     > next build
+     … +19 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+
+● Build passes cleanly. Let me also quickly check for an issue I want to verify
+  — the filter prop type compatibility. The hook now accepts { topic?: string; 
+  subtopic?: string } | undefined and page.tsx passes it that way. The useEffect
+   with filter?.topic / filter?.subtopic — both are optional strings, so it's
+  clean.
+
+● All done. Here's a summary of the changes:
+
+  src/server/routers/questions.ts — Added getPaginated procedure:
+  - Takes seed, page, pageSize, optional topic/subtopic
+  - Returns { questions, totalCount, page, pageSize, hasMore }
+  - Uses ORDER BY md5(id::text || seed::text) for deterministic random ordering
+  - Existing getAll procedure left intact (no breaking changes)
+
+  src/hooks/useQuestionStore.ts — Major rewrite:
+  - New signature: useQuestionStore(filter) — hook owns tRPC queries internally
+  - Session seed via sessionStorage (same seed = same order within a session)
+  - Accumulates pages into loadedQuestions as user navigates
+  - Prefetches next page when user is within 3 questions of the end
+  - Client-side archive/skip filtering on loaded questions
+  - displayTotal = totalCount - archived.size for accurate counter
+  - Resets all pagination state on filter change
+  - Exports new isLoading flag
+
+  src/app/page.tsx — Simplified:
+  - Removed getAll query and Array.isArray guard
+  - Passes filter directly to useQuestionStore(filter)
+  - Uses isLoading from hook for the loading spinner
+  - Removed error state for questions (hook handles internally)
+  - Removed unused Question type import
+
+✻ Brewed for 6m 39s
+
+❯ tell me how it's handled 
+
+● Here's the flow:
+
+  Seed generation — On first render, getSessionSeed() checks sessionStorage for
+  an existing seed. If none, it generates a random int (0–2^31) and stores it.
+  Same tab session = same seed = same shuffle order. Refresh the tab = new seed
+  = new order.
+
+  Initial load — The hook calls getPaginated with { seed, page: 0, pageSize: 10 
+  }. The server runs:
+  SELECT * FROM questions
+  WHERE ...
+  ORDER BY md5(id::text || seed::text)
+  LIMIT 10 OFFSET 0
+  md5 produces a deterministic hash per question+seed combo, so the ordering is
+  random but stable for that seed. The server also returns totalCount from a
+  COUNT(*) query.
+
+  Page accumulation — When pageQuery.data arrives, the effect at line 103 of the
+   hook appends the new questions to loadedQuestions and marks that page in
+  loadedPagesRef (a Set<number>) to prevent double-appending. The query itself
+  has enabled: !loadedPagesRef.current.has(currentPage) so already-fetched pages
+   don't re-fire.
+
+  Prefetch — An effect watches globalIndex vs visibleQuestions.length. When the
+  user is within 3 questions of the end and hasMore is true, it calls
+  utils.questions.getPaginated.prefetch(...) for the next page. This populates
+  TanStack Query's cache silently.
+
+  Page advance — A separate effect detects when globalIndex >= 
+  visibleQuestions.length - 1 and hasMore is true. It bumps currentPage, which
+  triggers the useQuery — but since the prefetch already cached the data, it's a
+   cache hit (no loading gap).
+
+  Client-side filtering — visibleQuestions is a useMemo that filters
+  loadedQuestions against the archived and skipped sets. Archive/skip never
+  invalidate the server cache — they just hide questions locally. The counter
+  shows totalCount - archived.size.
+
+  Index adjustment — When archiving or skipping, setGlobalIndex checks whether
+  the removed question was before/at the current position and adjusts
+  accordingly, so the user doesn't jump to a different question.
+
+  Filter change — A useEffect watches filter?.topic and filter?.subtopic. On
+  change, it clears loadedQuestions, loadedPagesRef, resets currentPage to 0,
+  and resets globalIndex — effectively a fresh start for the new filter.
+
+  isLast boundary — Returns true only when globalIndex >= 
+  visibleQuestions.length - 1 && !hasMore. So the "next" button stays enabled as
+   long as there are more pages to load, even if you're at the end of currently
+  loaded questions.

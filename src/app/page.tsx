@@ -112,8 +112,8 @@ export default function Home() {
         />
       )}
 
-      {/* Safe area spacing */}
-      <div className="h-2" />
+      {/* Safe area spacing for bottom nav */}
+      <div className="h-16" />
     </div>
   );
 }
