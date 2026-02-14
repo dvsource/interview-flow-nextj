@@ -24,7 +24,13 @@ interface InterviewCardProps {
   onSwipeRight?: () => void;
 }
 
-function TurnSection({ turns, section }: { turns: InterviewTurn[]; section: string }) {
+function TurnSection({
+  turns,
+  section,
+}: {
+  turns: InterviewTurn[];
+  section: string;
+}) {
   const sectionTurns = turns.filter((t) => t.section === section);
   if (sectionTurns.length === 0) return null;
 
@@ -49,7 +55,9 @@ function TurnSection({ turns, section }: { turns: InterviewTurn[]; section: stri
             >
               {turn.speaker === "interviewer" ? "Interviewer" : "You"}
             </Badge>
-            <span className="text-[10px] text-muted-foreground">{turn.topic}</span>
+            <span className="text-[10px] text-muted-foreground">
+              {turn.topic}
+            </span>
           </div>
           <div className="text-sm text-muted-foreground prose prose-sm prose-invert max-w-none">
             <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
@@ -102,7 +110,11 @@ export function InterviewCard({
           <div className="flex items-center justify-between px-1 mb-3">
             <div className="flex items-center gap-1.5 flex-wrap">
               {interview.technologies.slice(0, 4).map((tech) => (
-                <Badge key={tech} variant="secondary" className="text-[10px] font-medium">
+                <Badge
+                  key={tech}
+                  variant="secondary"
+                  className="text-[10px] font-medium"
+                >
                   {tech}
                 </Badge>
               ))}
@@ -125,7 +137,11 @@ export function InterviewCard({
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
             {/* Context - collapsible */}
-            <Collapsible open={contextOpen} onOpenChange={setContextOpen} className="mb-4">
+            <Collapsible
+              open={contextOpen}
+              onOpenChange={setContextOpen}
+              className="mb-4"
+            >
               <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
                 <ChevronRight
                   className={`h-3.5 w-3.5 transition-transform ${contextOpen ? "rotate-90" : ""}`}
@@ -140,7 +156,9 @@ export function InterviewCard({
                       <span className="text-muted-foreground">Company:</span>
                       <span>{interview.company}</span>
                       {interview.industry && (
-                        <span className="text-muted-foreground">({interview.industry})</span>
+                        <span className="text-muted-foreground">
+                          ({interview.industry})
+                        </span>
                       )}
                     </div>
                   )}
@@ -154,10 +172,14 @@ export function InterviewCard({
                   {interview.interviewerName && (
                     <div className="flex items-center gap-2">
                       <User className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">Interviewer:</span>
+                      <span className="text-muted-foreground">
+                        Interviewer:
+                      </span>
                       <span>{interview.interviewerName}</span>
                       {interview.interviewerTitle && (
-                        <span className="text-muted-foreground">({interview.interviewerTitle})</span>
+                        <span className="text-muted-foreground">
+                          ({interview.interviewerTitle})
+                        </span>
                       )}
                     </div>
                   )}
@@ -183,7 +205,11 @@ export function InterviewCard({
 
             {/* Conversation sections */}
             {sections.includes("intro") && (
-              <Collapsible open={introOpen} onOpenChange={setIntroOpen} className="mb-3">
+              <Collapsible
+                open={introOpen}
+                onOpenChange={setIntroOpen}
+                className="mb-3"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${introOpen ? "rotate-90" : ""}`}
@@ -199,7 +225,11 @@ export function InterviewCard({
             )}
 
             {sections.includes("warmup") && (
-              <Collapsible open={introOpen} onOpenChange={setIntroOpen} className="mb-3">
+              <Collapsible
+                open={introOpen}
+                onOpenChange={setIntroOpen}
+                className="mb-3"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${introOpen ? "rotate-90" : ""}`}
@@ -215,7 +245,11 @@ export function InterviewCard({
             )}
 
             {sections.includes("technical") && (
-              <Collapsible open={technicalOpen} onOpenChange={setTechnicalOpen} className="mb-3">
+              <Collapsible
+                open={technicalOpen}
+                onOpenChange={setTechnicalOpen}
+                className="mb-3"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${technicalOpen ? "rotate-90" : ""}`}
@@ -231,7 +265,11 @@ export function InterviewCard({
             )}
 
             {sections.includes("system-design") && (
-              <Collapsible open={systemDesignOpen} onOpenChange={setSystemDesignOpen} className="mb-3">
+              <Collapsible
+                open={systemDesignOpen}
+                onOpenChange={setSystemDesignOpen}
+                className="mb-3"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-green-400 hover:text-green-300 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${systemDesignOpen ? "rotate-90" : ""}`}
@@ -240,14 +278,21 @@ export function InterviewCard({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="mt-2 space-y-2">
-                    <TurnSection turns={interview.turns} section="system-design" />
+                    <TurnSection
+                      turns={interview.turns}
+                      section="system-design"
+                    />
                   </div>
                 </CollapsibleContent>
               </Collapsible>
             )}
 
             {sections.includes("behavioral") && (
-              <Collapsible open={behavioralOpen} onOpenChange={setBehavioralOpen} className="mb-3">
+              <Collapsible
+                open={behavioralOpen}
+                onOpenChange={setBehavioralOpen}
+                className="mb-3"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-purple-400 hover:text-purple-300 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${behavioralOpen ? "rotate-90" : ""}`}
@@ -269,6 +314,8 @@ export function InterviewCard({
                 {format(new Date(interview.generatedAt), "MMM d, yyyy")}
               </div>
             )}
+
+            <div className="h-16"></div>
           </div>
         </motion.div>
       </AnimatePresence>

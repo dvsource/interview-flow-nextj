@@ -178,6 +178,8 @@ export function QuestionCard({
                 {format(new Date(question.generatedAt), "MMM d, yyyy")}
               </div>
             )}
+
+            <div className="h-16"></div>
           </div>
         </motion.div>
       </AnimatePresence>

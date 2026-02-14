@@ -24,12 +24,12 @@ interface GuideCardProps {
   onSwipeRight?: () => void;
 }
 
-function SectionItem({ 
-  section, 
+function SectionItem({
+  section,
   children,
-  depth = 0 
-}: { 
-  section: GuideSection; 
+  depth = 0,
+}: {
+  section: GuideSection;
   children?: React.ReactNode;
   depth?: number;
 }) {
@@ -69,21 +69,23 @@ function SectionItem({
   );
 }
 
-function buildSectionTree(sections: GuideSection[]): Map<string, GuideSection[]> {
+function buildSectionTree(
+  sections: GuideSection[],
+): Map<string, GuideSection[]> {
   const tree = new Map<string, GuideSection[]>();
-  
+
   for (const section of sections) {
-    const parentId = section.id.includes(".") 
+    const parentId = section.id.includes(".")
       ? section.id.substring(0, section.id.lastIndexOf("."))
       : null;
-    
+
     if (parentId) {
       const children = tree.get(parentId) || [];
       children.push(section);
       tree.set(parentId, children);
     }
   }
-  
+
   return tree;
 }
 
@@ -112,13 +114,14 @@ export function GuideCard({
     level2: guide.sections.filter((s) => s.level === 2),
     level3: guide.sections.filter((s) => s.level === 3),
   };
-  
+
   const sectionTree = buildSectionTree(guide.sections);
-  const topLevelSections = sectionsByLevel.level1.length > 0 
-    ? sectionsByLevel.level1 
-    : sectionsByLevel.level2.length > 0 
-      ? sectionsByLevel.level2 
-      : sectionsByLevel.level3;
+  const topLevelSections =
+    sectionsByLevel.level1.length > 0
+      ? sectionsByLevel.level1
+      : sectionsByLevel.level2.length > 0
+        ? sectionsByLevel.level2
+        : sectionsByLevel.level3;
 
   const renderSection = (section: GuideSection, depth: number) => {
     const children = sectionTree.get(section.id) || [];
@@ -166,7 +169,11 @@ export function GuideCard({
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
             {/* Metadata - collapsible */}
-            <Collapsible open={metaOpen} onOpenChange={setMetaOpen} className="mb-4">
+            <Collapsible
+              open={metaOpen}
+              onOpenChange={setMetaOpen}
+              className="mb-4"
+            >
               <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
                 <ChevronRight
                   className={`h-3.5 w-3.5 transition-transform ${metaOpen ? "rotate-90" : ""}`}
@@ -200,7 +207,11 @@ export function GuideCard({
 
             {/* Table of Contents - collapsible */}
             {guide.tableOfContents.length > 0 && (
-              <Collapsible open={tocOpen} onOpenChange={setTocOpen} className="mb-4">
+              <Collapsible
+                open={tocOpen}
+                onOpenChange={setTocOpen}
+                className="mb-4"
+              >
                 <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${tocOpen ? "rotate-90" : ""}`}
@@ -243,6 +254,8 @@ export function GuideCard({
                 {format(new Date(guide.generatedAt), "MMM d, yyyy")}
               </div>
             )}
+
+            <div className="h-16"></div>
           </div>
         </motion.div>
       </AnimatePresence>

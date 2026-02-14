@@ -4,13 +4,20 @@ import { useEffect, useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useInterviewStore } from "@/hooks/useInterviewStore";
 import { InterviewCard } from "@/components/InterviewCard";
-import { SimpleNav } from "@/components/SimpleNav";
-import { InterviewFilter, type InterviewFilters } from "@/components/InterviewFilter";
+import { ActionBar } from "@/components/ActionBar";
+import {
+  InterviewFilter,
+  type InterviewFilters,
+} from "@/components/InterviewFilter";
 import { MessageSquare, Loader2 } from "lucide-react";
 
 export default function InterviewsPage() {
-  const [selectedPosition, setSelectedPosition] = useState<string | undefined>();
-  const [selectedTechnology, setSelectedTechnology] = useState<string | undefined>();
+  const [selectedPosition, setSelectedPosition] = useState<
+    string | undefined
+  >();
+  const [selectedTechnology, setSelectedTechnology] = useState<
+    string | undefined
+  >();
   const [direction, setDirection] = useState<1 | -1>(1);
 
   const filter = useMemo(
@@ -18,7 +25,7 @@ export default function InterviewsPage() {
       selectedPosition || selectedTechnology
         ? { position: selectedPosition, technology: selectedTechnology }
         : undefined,
-    [selectedPosition, selectedTechnology]
+    [selectedPosition, selectedTechnology],
   );
 
   const filtersQuery = trpc.interviews.getFilters.useQuery(undefined, {
@@ -73,11 +80,13 @@ export default function InterviewsPage() {
       </header>
 
       {/* Main card area */}
-      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-5 shadow-sm">
+      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-3 pb-24 shadow-sm">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading interviews...</p>
+            <p className="text-sm text-muted-foreground">
+              Loading interviews...
+            </p>
           </div>
         ) : currentInterview ? (
           <InterviewCard
@@ -109,7 +118,7 @@ export default function InterviewsPage() {
 
       {/* Bottom navigation */}
       {currentInterview && (
-        <SimpleNav
+        <ActionBar
           onPrev={() => {
             setDirection(-1);
             goPrev();

@@ -11,7 +11,9 @@ import { BookOpen, Loader2 } from "lucide-react";
 
 export default function Home() {
   const [selectedTopic, setSelectedTopic] = useState<string | undefined>();
-  const [selectedSubtopic, setSelectedSubtopic] = useState<string | undefined>();
+  const [selectedSubtopic, setSelectedSubtopic] = useState<
+    string | undefined
+  >();
   const [direction, setDirection] = useState<1 | -1>(1);
 
   const filter = useMemo(
@@ -19,7 +21,7 @@ export default function Home() {
       selectedTopic
         ? { topic: selectedTopic, subtopic: selectedSubtopic }
         : undefined,
-    [selectedTopic, selectedSubtopic]
+    [selectedTopic, selectedSubtopic],
   );
 
   const topicsQuery = trpc.questions.getTopics.useQuery(undefined, {
@@ -44,8 +46,14 @@ export default function Home() {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "d") { setDirection(1); goNext(); }
-      if (e.key === "ArrowLeft" || e.key === "a") { setDirection(-1); goPrev(); }
+      if (e.key === "ArrowRight" || e.key === "d") {
+        setDirection(1);
+        goNext();
+      }
+      if (e.key === "ArrowLeft" || e.key === "a") {
+        setDirection(-1);
+        goPrev();
+      }
       if (e.key === "s" && currentQuestion) skipQuestion(currentQuestion.id);
       if (e.key === "x" && currentQuestion) archiveQuestion(currentQuestion.id);
     };
@@ -63,7 +71,11 @@ export default function Home() {
         </h1>
         <div className="ml-auto">
           <TopicFilter
-            topics={(Array.isArray(topicsQuery.data) ? topicsQuery.data : []) as TopicEntry[]}
+            topics={
+              (Array.isArray(topicsQuery.data)
+                ? topicsQuery.data
+                : []) as TopicEntry[]
+            }
             selectedTopic={selectedTopic}
             selectedSubtopic={selectedSubtopic}
             onTopicChange={(topic) => {
@@ -76,11 +88,13 @@ export default function Home() {
       </header>
 
       {/* Main card area */}
-      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-5 shadow-sm">
+      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-3 shadow-sm">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading questions...</p>
+            <p className="text-sm text-muted-foreground">
+              Loading questions...
+            </p>
           </div>
         ) : currentQuestion ? (
           <QuestionCard
@@ -88,8 +102,14 @@ export default function Home() {
             index={currentIndex}
             total={totalAvailable}
             direction={direction}
-            onSwipeLeft={() => { setDirection(1); goNext(); }}
-            onSwipeRight={() => { setDirection(-1); goPrev(); }}
+            onSwipeLeft={() => {
+              setDirection(1);
+              goNext();
+            }}
+            onSwipeRight={() => {
+              setDirection(-1);
+              goPrev();
+            }}
           />
         ) : (
           <EmptyState
@@ -102,8 +122,14 @@ export default function Home() {
       {/* Bottom actions */}
       {currentQuestion && (
         <ActionBar
-          onPrev={() => { setDirection(-1); goPrev(); }}
-          onNext={() => { setDirection(1); goNext(); }}
+          onPrev={() => {
+            setDirection(-1);
+            goPrev();
+          }}
+          onNext={() => {
+            setDirection(1);
+            goNext();
+          }}
           onSkip={() => skipQuestion(currentQuestion.id)}
           onArchive={() => archiveQuestion(currentQuestion.id)}
           isFirst={isFirst}
@@ -112,7 +138,7 @@ export default function Home() {
         />
       )}
 
-      {/* Safe area spacing for bottom nav */}
+      {/* Safe area spacing */}
       <div className="h-16" />
     </div>
   );

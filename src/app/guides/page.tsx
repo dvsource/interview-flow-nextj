@@ -4,17 +4,19 @@ import { useEffect, useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useGuideStore } from "@/hooks/useGuideStore";
 import { GuideCard } from "@/components/GuideCard";
-import { SimpleNav } from "@/components/SimpleNav";
+import { ActionBar } from "@/components/ActionBar";
 import { GuideFilter, type GuideFilters } from "@/components/GuideFilter";
 import { FileText, Loader2 } from "lucide-react";
 
 export default function GuidesPage() {
-  const [selectedTechStack, setSelectedTechStack] = useState<string | undefined>();
+  const [selectedTechStack, setSelectedTechStack] = useState<
+    string | undefined
+  >();
   const [direction, setDirection] = useState<1 | -1>(1);
 
   const filter = useMemo(
     () => (selectedTechStack ? { techStack: selectedTechStack } : undefined),
-    [selectedTechStack]
+    [selectedTechStack],
   );
 
   const filtersQuery = trpc.guides.getFilters.useQuery(undefined, {
@@ -65,7 +67,7 @@ export default function GuidesPage() {
       </header>
 
       {/* Main card area */}
-      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-5 shadow-sm">
+      <main className="flex-1 min-h-0 flex flex-col bg-card rounded-2xl border border-border p-3 pb-24 shadow-sm">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
@@ -101,7 +103,7 @@ export default function GuidesPage() {
 
       {/* Bottom navigation */}
       {currentGuide && (
-        <SimpleNav
+        <ActionBar
           onPrev={() => {
             setDirection(-1);
             goPrev();
