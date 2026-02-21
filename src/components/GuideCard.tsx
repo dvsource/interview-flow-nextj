@@ -143,12 +143,18 @@ export function GuideCard({
 
   return (
     <div {...swipeHandlers} className="flex flex-col h-full">
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait" custom={direction} initial={false}>
         <motion.div
           key={guide.id}
-          initial={{ opacity: 0, x: 80 * direction }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -80 * direction }}
+          custom={direction}
+          variants={{
+            enter: (d: number) => ({ opacity: 0, x: 80 * d }),
+            center: { opacity: 1, x: 0 },
+            exit: (d: number) => ({ opacity: 0, x: -80 * d }),
+          }}
+          initial="enter"
+          animate="center"
+          exit="exit"
           transition={{ type: "spring", stiffness: 400, damping: 32 }}
           className="flex flex-col h-full"
         >
