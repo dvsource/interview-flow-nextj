@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { markdownComponents } from "@/lib/markdown";
 import { Interview, InterviewTurn } from "@/types/interview";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -61,7 +63,7 @@ function TurnSection({
             </span>
           </div>
           <div className="text-sm text-muted-foreground prose prose-sm prose-invert max-w-none">
-            <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
               {turn.content}
             </ReactMarkdown>
           </div>

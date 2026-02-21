@@ -225,13 +225,16 @@
     @apply text-primary underline underline-offset-2;
   }
   .markdown-content table {
-    @apply w-full mb-4 border-collapse;
+    @apply w-full border-collapse text-sm;
   }
   .markdown-content th {
-    @apply text-left font-semibold p-2 border-b border-border text-foreground;
+    @apply text-left font-semibold px-3 py-2 border-b border-border text-foreground whitespace-nowrap bg-muted/50;
   }
   .markdown-content td {
-    @apply p-2 border-b border-border text-card-foreground/85;
+    @apply px-3 py-2 border-b border-border text-card-foreground/85;
+  }
+  .markdown-content tr:hover td {
+    @apply bg-muted/30;
   }
 
   /* Title inline code */

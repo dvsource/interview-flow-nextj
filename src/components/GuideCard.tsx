@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { markdownComponents } from "@/lib/markdown";
 import { Guide, GuideSection } from "@/types/guide";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -58,7 +60,7 @@ function SectionItem({
             style={{ paddingLeft: paddingLeft + 24 }}
           >
             <div className="markdown-content">
-              <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                 {section.content}
               </ReactMarkdown>
             </div>

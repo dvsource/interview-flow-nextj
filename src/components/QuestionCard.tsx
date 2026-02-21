@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
+import { markdownComponents } from "@/lib/markdown";
 import { Question } from "@/types/question";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -127,7 +129,7 @@ export function QuestionCard({
 
             {/* Answer */}
             <div className="markdown-content">
-              <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                 {question.answer}
               </ReactMarkdown>
             </div>
@@ -148,7 +150,7 @@ export function QuestionCard({
                 <CollapsibleContent>
                   <div className="mt-2 pl-3 border-l-2 border-primary/30 text-sm text-muted-foreground">
                     <div className="markdown-content">
-                      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                         {question.whyImportant}
                       </ReactMarkdown>
                     </div>
@@ -173,7 +175,7 @@ export function QuestionCard({
                 <CollapsibleContent>
                   <div className="mt-2 pl-3 border-l-2 border-yellow-500/30 text-sm text-muted-foreground">
                     <div className="markdown-content">
-                      <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                         {question.keyNotes}
                       </ReactMarkdown>
                     </div>
