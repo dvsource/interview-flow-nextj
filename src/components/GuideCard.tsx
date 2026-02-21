@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/collapsible";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
+import { isInsideHorizontalScroll } from "@/lib/swipe-utils";
 import { ChevronRight, Calendar, Clock, Target, Layers } from "lucide-react";
 import { format } from "date-fns";
 
@@ -101,8 +102,12 @@ export function GuideCard({
   const [tocOpen, setTocOpen] = useState(false);
 
   const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => onSwipeLeft?.(),
-    onSwipedRight: () => onSwipeRight?.(),
+    onSwipedLeft: (e) => {
+      if (!isInsideHorizontalScroll(e.event.target)) onSwipeLeft?.();
+    },
+    onSwipedRight: (e) => {
+      if (!isInsideHorizontalScroll(e.event.target)) onSwipeRight?.();
+    },
     delta: 40,
     preventScrollOnSwipe: false,
     trackTouch: true,
