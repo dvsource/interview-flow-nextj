@@ -11,7 +11,7 @@ export const guidesRouter = router({
         .object({
           techStack: z.string().optional(),
         })
-        .nullish()
+        .nullish(),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -36,7 +36,7 @@ export const guidesRouter = router({
         page: z.number().int().min(0),
         pageSize: z.number().int().min(1).max(50).default(10),
         techStack: z.string().nullish(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -46,7 +46,8 @@ export const guidesRouter = router({
       if (input.techStack) {
         conditions.push(eq(guides.techStack, input.techStack));
       }
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       const [{ total }] = await db
         .select({ total: count() })
@@ -83,7 +84,10 @@ export const guidesRouter = router({
     const techStackCounts = new Map<string, number>();
     for (const row of rows) {
       if (row.techStack) {
-        techStackCounts.set(row.techStack, (techStackCounts.get(row.techStack) || 0) + 1);
+        techStackCounts.set(
+          row.techStack,
+          (techStackCounts.get(row.techStack) || 0) + 1,
+        );
       }
     }
 

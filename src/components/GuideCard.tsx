@@ -60,7 +60,11 @@ function SectionItem({
             style={{ paddingLeft: paddingLeft + 24 }}
           >
             <div className="markdown-content">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={markdownComponents}
+              >
                 {section.content}
               </ReactMarkdown>
             </div>

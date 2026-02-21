@@ -19,7 +19,7 @@ function getSessionSeed(): number {
 }
 
 export function useInterviewStore(
-  filter: { position?: string; technology?: string } | undefined
+  filter: { position?: string; technology?: string } | undefined,
 ) {
   const [seed] = useState(() => getSessionSeed());
   const [currentPage, setCurrentPage] = useState(0);
@@ -60,7 +60,7 @@ export function useInterviewStore(
     {
       staleTime: 5 * 60 * 1000,
       enabled: !loadedPagesRef.current.has(currentPage),
-    }
+    },
   );
 
   useEffect(() => {
@@ -69,7 +69,10 @@ export function useInterviewStore(
     if (loadedPagesRef.current.has(data.page)) return;
 
     loadedPagesRef.current.add(data.page);
-    setLoadedInterviews((prev) => [...prev, ...(data.interviews as Interview[])]);
+    setLoadedInterviews((prev) => [
+      ...prev,
+      ...(data.interviews as Interview[]),
+    ]);
     setTotalCount(data.totalCount);
     setHasMore(data.hasMore);
   }, [pageQuery.data]);
@@ -91,7 +94,15 @@ export function useInterviewStore(
         });
       }
     }
-  }, [globalIndex, loadedInterviews.length, hasMore, currentPage, seed, filter, utils]);
+  }, [
+    globalIndex,
+    loadedInterviews.length,
+    hasMore,
+    currentPage,
+    seed,
+    filter,
+    utils,
+  ]);
 
   useEffect(() => {
     if (!hasMore) return;

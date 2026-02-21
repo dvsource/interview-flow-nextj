@@ -11,7 +11,7 @@
 
 .hljs {
   background: transparent;
-  color: #D3C6AA;
+  color: #d3c6aa;
 }
 
 /* Comments */
@@ -24,98 +24,98 @@
 /* Keywords / control flow */
 .hljs-keyword,
 .hljs-selector-tag {
-  color: #E67E80;
+  color: #e67e80;
 }
 
 /* Strings */
 .hljs-string,
 .hljs-template-tag,
 .hljs-template-variable {
-  color: #A7C080;
+  color: #a7c080;
 }
 
 /* Numbers, booleans, null */
 .hljs-number,
 .hljs-literal {
-  color: #D699B6;
+  color: #d699b6;
 }
 
 /* Function names / titles */
 .hljs-title,
 .hljs-title.function_,
 .hljs-title.class_ {
-  color: #83C092;
+  color: #83c092;
 }
 
 /* Types / classes when used as types */
 .hljs-type,
 .hljs-built_in {
-  color: #DBBC7F;
+  color: #dbbc7f;
 }
 
 /* Attributes, properties, object keys */
 .hljs-attr,
 .hljs-property {
-  color: #7FBBB3;
+  color: #7fbbb3;
 }
 
 /* Variables, params */
 .hljs-variable,
 .hljs-params {
-  color: #D3C6AA;
+  color: #d3c6aa;
 }
 
 /* Operators, punctuation */
 .hljs-operator,
 .hljs-punctuation {
-  color: #E69875;
+  color: #e69875;
 }
 
 /* Regex */
 .hljs-regexp {
-  color: #A7C080;
+  color: #a7c080;
 }
 
 /* Tags (HTML/XML) */
 .hljs-tag {
-  color: #E69875;
+  color: #e69875;
 }
 
 /* Tag name */
 .hljs-name {
-  color: #E67E80;
+  color: #e67e80;
 }
 
 /* Symbols, bullets */
 .hljs-symbol,
 .hljs-bullet {
-  color: #E69875;
+  color: #e69875;
 }
 
 /* Links, urls */
 .hljs-link {
-  color: #7FBBB3;
+  color: #7fbbb3;
   text-decoration: underline;
 }
 
 /* Meta / preprocessor */
 .hljs-meta,
 .hljs-meta .hljs-keyword {
-  color: #E69875;
+  color: #e69875;
 }
 
 .hljs-meta .hljs-string {
-  color: #A7C080;
+  color: #a7c080;
 }
 
 /* Doc tags (@param, @return, etc.) */
 .hljs-doctag {
-  color: #E67E80;
+  color: #e67e80;
 }
 
 /* Section headings (markdown, etc.) */
 .hljs-section {
-  color: #83C092;
+  color: #83c092;
   font-weight: bold;
 }
 
@@ -124,23 +124,23 @@
 .hljs-selector-class,
 .hljs-selector-attr,
 .hljs-selector-pseudo {
-  color: #83C092;
+  color: #83c092;
 }
 
 /* CSS attribute */
 .hljs-attribute {
-  color: #7FBBB3;
+  color: #7fbbb3;
 }
 
 /* Addition / deletion (diff) */
 .hljs-addition {
   background-color: #425047;
-  color: #A7C080;
+  color: #a7c080;
 }
 
 .hljs-deletion {
   background-color: #514045;
-  color: #E67E80;
+  color: #e67e80;
 }
 
 /* Emphasis */

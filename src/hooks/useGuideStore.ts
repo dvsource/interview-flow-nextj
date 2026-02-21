@@ -56,7 +56,7 @@ export function useGuideStore(filter: { techStack?: string } | undefined) {
     {
       staleTime: 5 * 60 * 1000,
       enabled: !loadedPagesRef.current.has(currentPage),
-    }
+    },
   );
 
   useEffect(() => {
@@ -86,7 +86,15 @@ export function useGuideStore(filter: { techStack?: string } | undefined) {
         });
       }
     }
-  }, [globalIndex, loadedGuides.length, hasMore, currentPage, seed, filter, utils]);
+  }, [
+    globalIndex,
+    loadedGuides.length,
+    hasMore,
+    currentPage,
+    seed,
+    filter,
+    utils,
+  ]);
 
   useEffect(() => {
     if (!hasMore) return;

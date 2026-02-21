@@ -38,7 +38,7 @@ function getSessionSeed(): number {
 }
 
 export function useQuestionStore(
-  filter: { topic?: string; subtopic?: string } | undefined
+  filter: { topic?: string; subtopic?: string } | undefined,
 ) {
   const [seed] = useState(() => getSessionSeed());
   const [currentPage, setCurrentPage] = useState(0);
@@ -47,7 +47,9 @@ export function useQuestionStore(
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const [archived, setArchived] = useState<Set<string>>(() => loadSet(ARCHIVED_KEY));
+  const [archived, setArchived] = useState<Set<string>>(() =>
+    loadSet(ARCHIVED_KEY),
+  );
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
 
   const loadedPagesRef = useRef<Set<number>>(new Set());
@@ -118,7 +120,7 @@ export function useQuestionStore(
     {
       staleTime: 5 * 60 * 1000,
       enabled: !loadedPagesRef.current.has(currentPage),
-    }
+    },
   );
 
   // Append new page data when it arrives
@@ -137,9 +139,9 @@ export function useQuestionStore(
   const visibleQuestions = useMemo(
     () =>
       loadedQuestions.filter(
-        (q) => !archived.has(String(q.id)) && !skipped.has(String(q.id))
+        (q) => !archived.has(String(q.id)) && !skipped.has(String(q.id)),
       ),
-    [loadedQuestions, archived, skipped]
+    [loadedQuestions, archived, skipped],
   );
 
   const currentQuestion = visibleQuestions[globalIndex] ?? null;
@@ -161,7 +163,15 @@ export function useQuestionStore(
         });
       }
     }
-  }, [globalIndex, visibleQuestions.length, hasMore, currentPage, seed, filter, utils]);
+  }, [
+    globalIndex,
+    visibleQuestions.length,
+    hasMore,
+    currentPage,
+    seed,
+    filter,
+    utils,
+  ]);
 
   // Auto-advance to next page when user reaches the end of loaded visible questions
   useEffect(() => {
@@ -200,12 +210,13 @@ export function useQuestionStore(
         const idx = visibleQuestions.findIndex((q) => q.id === id);
         if (idx !== -1 && idx < i) return Math.max(0, i - 1);
         // If archiving the current question and it's the last visible, step back
-        if (idx === i && i >= visibleQuestions.length - 1) return Math.max(0, i - 1);
+        if (idx === i && i >= visibleQuestions.length - 1)
+          return Math.max(0, i - 1);
         return i;
       });
       setActionMut.mutate({ questionId: id, action: "archive" });
     },
-    [setActionMut, visibleQuestions]
+    [setActionMut, visibleQuestions],
   );
 
   const skipQuestion = useCallback(
@@ -221,12 +232,13 @@ export function useQuestionStore(
       setGlobalIndex((i) => {
         const idx = visibleQuestions.findIndex((q) => q.id === id);
         if (idx !== -1 && idx < i) return Math.max(0, i - 1);
-        if (idx === i && i >= visibleQuestions.length - 1) return Math.max(0, i - 1);
+        if (idx === i && i >= visibleQuestions.length - 1)
+          return Math.max(0, i - 1);
         return i;
       });
       setActionMut.mutate({ questionId: id, action: "skip" });
     },
-    [setActionMut, visibleQuestions]
+    [setActionMut, visibleQuestions],
   );
 
   const clearSkipped = useCallback(() => {

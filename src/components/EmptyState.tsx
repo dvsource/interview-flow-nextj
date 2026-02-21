@@ -21,7 +21,11 @@ export function EmptyState({ archivedCount, onClearSkipped }: EmptyStateProps) {
           : ""}
         Refresh the page or bring back skipped questions to continue.
       </p>
-      <Button variant="outline" onClick={onClearSkipped} className="rounded-full">
+      <Button
+        variant="outline"
+        onClick={onClearSkipped}
+        className="rounded-full"
+      >
         Bring back skipped questions
       </Button>
     </div>

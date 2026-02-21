@@ -63,7 +63,11 @@ function TurnSection({
             </span>
           </div>
           <div className="text-sm text-muted-foreground prose prose-sm prose-invert max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={markdownComponents}
+            >
               {turn.content}
             </ReactMarkdown>
           </div>

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

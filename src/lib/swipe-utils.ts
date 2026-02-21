@@ -2,9 +2,7 @@
  * Checks if an event target is inside an element with horizontal scroll.
  * Used to prevent swipe navigation when the user is scrolling a code block.
  */
-export function isInsideHorizontalScroll(
-  target: EventTarget | null,
-): boolean {
+export function isInsideHorizontalScroll(target: EventTarget | null): boolean {
   let el = target as HTMLElement | null;
   while (el) {
     if (el.scrollWidth > el.clientWidth) {

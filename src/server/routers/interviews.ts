@@ -12,7 +12,7 @@ export const interviewsRouter = router({
           position: z.string().optional(),
           technology: z.string().optional(),
         })
-        .nullish()
+        .nullish(),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -22,7 +22,9 @@ export const interviewsRouter = router({
         conditions.push(eq(interviews.position, input.position));
       }
       if (input?.technology) {
-        conditions.push(sql`${input.technology} = ANY(${interviews.technologies})`);
+        conditions.push(
+          sql`${input.technology} = ANY(${interviews.technologies})`,
+        );
       }
 
       const rows = await db
@@ -41,7 +43,7 @@ export const interviewsRouter = router({
         pageSize: z.number().int().min(1).max(50).default(10),
         position: z.string().nullish(),
         technology: z.string().nullish(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -52,9 +54,12 @@ export const interviewsRouter = router({
         conditions.push(eq(interviews.position, input.position));
       }
       if (input.technology) {
-        conditions.push(sql`${input.technology} = ANY(${interviews.technologies})`);
+        conditions.push(
+          sql`${input.technology} = ANY(${interviews.technologies})`,
+        );
       }
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       const [{ total }] = await db
         .select({ total: count() })
@@ -94,7 +99,10 @@ export const interviewsRouter = router({
 
     for (const row of allRows) {
       if (row.position) {
-        positionCounts.set(row.position, (positionCounts.get(row.position) || 0) + 1);
+        positionCounts.set(
+          row.position,
+          (positionCounts.get(row.position) || 0) + 1,
+        );
       }
       for (const tech of row.technologies || []) {
         techCounts.set(tech, (techCounts.get(tech) || 0) + 1);

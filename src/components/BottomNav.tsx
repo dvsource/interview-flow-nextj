@@ -27,11 +27,16 @@ export function BottomNav() {
                 "flex flex-col items-center justify-center gap-0.5 py-1 px-4 transition-colors",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className={cn("h-5 w-5", isActive && "text-amber-400")} />
-              <span className={cn("text-[11px] font-medium", isActive && "text-amber-400")}>
+              <span
+                className={cn(
+                  "text-[11px] font-medium",
+                  isActive && "text-amber-400",
+                )}
+              >
                 {label}
               </span>
             </Link>

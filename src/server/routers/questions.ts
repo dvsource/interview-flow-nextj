@@ -12,7 +12,7 @@ export const questionsRouter = router({
           topic: z.string().optional(),
           subtopic: z.string().optional(),
         })
-        .nullish()
+        .nullish(),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -38,7 +38,7 @@ export const questionsRouter = router({
         pageSize: z.number().int().min(1).max(50).default(10),
         topic: z.string().nullish(),
         subtopic: z.string().nullish(),
-      })
+      }),
     )
     .query(async ({ input }) => {
       const db = getDb();
@@ -46,8 +46,10 @@ export const questionsRouter = router({
 
       const conditions = [];
       if (input.topic) conditions.push(eq(questions.topic, input.topic));
-      if (input.subtopic) conditions.push(eq(questions.subtopic, input.subtopic));
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      if (input.subtopic)
+        conditions.push(eq(questions.subtopic, input.subtopic));
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       const [{ total }] = await db
         .select({ total: count() })
@@ -101,7 +103,7 @@ export const questionsRouter = router({
       z.object({
         questionId: z.number(),
         action: z.enum(["archive", "skip"]),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const db = getDb();
@@ -120,7 +122,7 @@ export const questionsRouter = router({
       z.object({
         questionId: z.number().nullish(),
         action: z.enum(["archive", "skip"]),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       const db = getDb();
@@ -128,9 +130,7 @@ export const questionsRouter = router({
       if (input.questionId != null) {
         conditions.push(eq(questionActions.questionId, input.questionId));
       }
-      await db
-        .delete(questionActions)
-        .where(and(...conditions));
+      await db.delete(questionActions).where(and(...conditions));
       return { success: true };
     }),
 });

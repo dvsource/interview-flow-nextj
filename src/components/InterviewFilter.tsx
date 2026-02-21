@@ -43,7 +43,9 @@ export function InterviewFilter({
       {positions.length > 0 && (
         <Select
           value={selectedPosition ?? "__all__"}
-          onValueChange={(v) => onPositionChange(v === "__all__" ? undefined : v)}
+          onValueChange={(v) =>
+            onPositionChange(v === "__all__" ? undefined : v)
+          }
         >
           <SelectTrigger className="h-8 w-[130px] text-xs">
             <SelectValue placeholder="Position" />
@@ -62,7 +64,9 @@ export function InterviewFilter({
       {filteredTechnologies.length > 0 && (
         <Select
           value={selectedTechnology ?? "__all__"}
-          onValueChange={(v) => onTechnologyChange(v === "__all__" ? undefined : v)}
+          onValueChange={(v) =>
+            onTechnologyChange(v === "__all__" ? undefined : v)
+          }
         >
           <SelectTrigger className="h-8 w-[130px] text-xs">
             <SelectValue placeholder="Tech" />
