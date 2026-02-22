@@ -15,7 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useSwipeable } from "react-swipeable";
 import { isInsideHorizontalScroll } from "@/lib/swipe-utils";
-import { ChevronRight, Calendar } from "lucide-react";
+import { ChevronRight, Calendar, Signal, Target } from "lucide-react";
 import { format } from "date-fns";
 
 function renderInlineCode(text: string) {
@@ -81,9 +81,8 @@ export function QuestionCard({
           transition={{ type: "spring", stiffness: 400, damping: 32 }}
           className="flex flex-col h-full"
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-1 mb-4">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Badge variant="secondary" className="text-xs font-medium">
                 {question.topic}
               </Badge>
@@ -92,31 +91,50 @@ export function QuestionCard({
                   {question.subtopic}
                 </Badge>
               )}
+              {question.difficulty && (
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs font-medium ${
+                    question.difficulty === 'Extreme' ? 'border-destructive/50 text-destructive' :
+                    question.difficulty === 'Advanced' ? 'border-warning/50 text-warning' :
+                    question.difficulty === 'Intermediate' ? 'border-highlight/50 text-highlight' :
+                    'border-success/50 text-success'
+                  }`}
+                >
+                  {question.difficulty}
+                </Badge>
+              )}
+              {question.probability && (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs font-medium flex items-center gap-1"
+                  title="Interview probability"
+                >
+                  <Target className="h-3 w-3" />
+                  {question.probability}
+                </Badge>
+              )}
             </div>
             <span className="text-xs text-muted-foreground font-mono">
               {index + 1} / {total}
             </span>
           </div>
 
-          {/* Summary (short title) */}
-          <h2 className="text-lg font-semibold text-amber-200 mb-4 leading-snug">
+          <h2 className="text-lg font-semibold text-highlight mb-4 leading-snug">
             {renderInlineCode(question.summary)}
           </h2>
 
-          {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
-            {/* Full question as blockquote */}
-            <p className="text-md text-amber-200 border-l-2 border-amber-500/40 pl-3 mb-4 leading-relaxed">
+            <p className="text-md text-highlight border-l-2 border-highlight/40 pl-3 mb-4 leading-relaxed">
               {renderInlineCode(question.question)}
             </p>
 
-            {/* Keywords */}
             {question.keywords.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {question.keywords.map((kw) => (
                   <span
                     key={kw}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 font-medium"
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-highlight/15 text-highlight font-medium"
                   >
                     {kw}
                   </span>
@@ -124,10 +142,8 @@ export function QuestionCard({
               </div>
             )}
 
-            {/* Divider */}
             <div className="h-px bg-border mb-4" />
 
-            {/* Answer */}
             <div className="markdown-content">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -138,7 +154,6 @@ export function QuestionCard({
               </ReactMarkdown>
             </div>
 
-            {/* Why it's asked - collapsible */}
             {question.whyImportant && (
               <Collapsible
                 open={whyOpen}
@@ -167,7 +182,6 @@ export function QuestionCard({
               </Collapsible>
             )}
 
-            {/* Key notes - collapsible */}
             {question.keyNotes && (
               <Collapsible
                 open={notesOpen}
@@ -181,7 +195,7 @@ export function QuestionCard({
                   Key notes & gotchas
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="mt-2 pl-3 border-l-2 border-yellow-500/30 text-sm text-muted-foreground">
+                  <div className="mt-2 pl-3 border-l-2 border-highlight/30 text-sm text-muted-foreground">
                     <div className="markdown-content">
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
@@ -196,7 +210,6 @@ export function QuestionCard({
               </Collapsible>
             )}
 
-            {/* Generated date */}
             {question.generatedAt && (
               <div className="flex items-center gap-1.5 mt-4 text-[11px] text-muted-foreground/60">
                 <Calendar className="h-3 w-3" />

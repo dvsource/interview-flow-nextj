@@ -38,7 +38,7 @@ function getSessionSeed(): number {
 }
 
 export function useQuestionStore(
-  filter: { topic?: string; subtopic?: string } | undefined,
+  filter: { topic?: string; subtopic?: string; difficulty?: string; sortByProbability?: boolean } | undefined,
 ) {
   const [seed] = useState(() => getSessionSeed());
   const [currentPage, setCurrentPage] = useState(0);
@@ -96,9 +96,11 @@ export function useQuestionStore(
     const prev = filterRef.current;
     const topicChanged = prev?.topic !== filter?.topic;
     const subtopicChanged = prev?.subtopic !== filter?.subtopic;
+    const difficultyChanged = prev?.difficulty !== filter?.difficulty;
+    const sortChanged = prev?.sortByProbability !== filter?.sortByProbability;
     filterRef.current = filter;
 
-    if (topicChanged || subtopicChanged) {
+    if (topicChanged || subtopicChanged || difficultyChanged || sortChanged) {
       loadedPagesRef.current = new Set();
       setLoadedQuestions([]);
       setGlobalIndex(0);
@@ -106,7 +108,7 @@ export function useQuestionStore(
       setTotalCount(0);
       setHasMore(true);
     }
-  }, [filter?.topic, filter?.subtopic]);
+  }, [filter?.topic, filter?.subtopic, filter?.difficulty, filter?.sortByProbability]);
 
   // Fetch current page
   const pageQuery = trpc.questions.getPaginated.useQuery(
@@ -116,6 +118,8 @@ export function useQuestionStore(
       pageSize: 10,
       topic: filter?.topic,
       subtopic: filter?.subtopic,
+      difficulty: filter?.difficulty,
+      sortByProbability: filter?.sortByProbability,
     },
     {
       staleTime: 5 * 60 * 1000,
@@ -160,6 +164,8 @@ export function useQuestionStore(
           pageSize: 10,
           topic: filter?.topic,
           subtopic: filter?.subtopic,
+          difficulty: filter?.difficulty,
+          sortByProbability: filter?.sortByProbability,
         });
       }
     }

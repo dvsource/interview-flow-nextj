@@ -20,6 +20,9 @@ export const questions = pgTable("questions", {
   sourceFile: text("source_file").notNull(),
   generatedAt: timestamp("generated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  difficulty: text("difficulty"),
+  probability: integer("probability"),
+  notes: text("notes").default(""),
 });
 
 export const questionActions = pgTable("question_actions", {

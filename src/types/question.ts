@@ -14,4 +14,7 @@ export interface Question {
   sourceFile: string;
   generatedAt: string | null;
   createdAt: string | null;
+  difficulty: string | null;
+  probability: number | null;
+  notes: string | null;
 }

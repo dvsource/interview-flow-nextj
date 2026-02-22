@@ -6,7 +6,7 @@ import { BookOpen, MessageSquare, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Questions", icon: BookOpen },
+  { href: "/questions", label: "Questions", icon: BookOpen },
   { href: "/interviews", label: "Interviews", icon: MessageSquare },
   { href: "/guides", label: "Guides", icon: FileText },
 ];
@@ -16,29 +16,21 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t border-border">
-      <div className="max-w-lg mx-auto flex items-center justify-around h-14">
+      <div className="max-w-lg mx-auto flex items-center justify-around h-10">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href;
+          const isActive = pathname === href || (href === "/questions" && pathname === "/");
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 py-1 px-4 transition-colors",
+                "flex items-center justify-center py-1.5 px-4 transition-colors",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "text-amber-400")} />
-              <span
-                className={cn(
-                  "text-[11px] font-medium",
-                  isActive && "text-amber-400",
-                )}
-              >
-                {label}
-              </span>
+              <Icon className={cn("h-5 w-5", isActive && "text-highlight")} />
             </Link>
           );
         })}

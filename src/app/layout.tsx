@@ -1,24 +1,17 @@
-"use client";
-
-import "./globals.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import Providers from "@/app/providers";
 import { BottomNav } from "@/components/BottomNav";
-import { useState } from "react";
-import { trpc, getTrpcClient } from "@/lib/trpc";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import "./globals.css";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [queryClient] = useState(() => new QueryClient());
-  const [trpcClient] = useState(() => getTrpcClient());
-
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="theme-slate">
       <head>
         <title>InterviewPrep</title>
         <meta name="description" content="Interview question flashcard app" />
@@ -34,16 +27,14 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              {children}
-              <BottomNav />
-            </TooltipProvider>
-          </QueryClientProvider>
-        </trpc.Provider>
+        <Providers>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            {children}
+            <BottomNav />
+          </TooltipProvider>
+        </Providers>
       </body>
     </html>
   );

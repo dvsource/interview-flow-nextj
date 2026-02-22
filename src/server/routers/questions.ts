@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, count, sql } from "drizzle-orm";
+import { eq, and, count, sql, desc, asc } from "drizzle-orm";
 import { router, publicProcedure } from "../trpc";
 import { getDb } from "../db";
 import { questions, questionActions } from "../schema";
@@ -11,6 +11,7 @@ export const questionsRouter = router({
         .object({
           topic: z.string().optional(),
           subtopic: z.string().optional(),
+          difficulty: z.string().optional(),
         })
         .nullish(),
     )
@@ -21,6 +22,8 @@ export const questionsRouter = router({
       if (input?.topic) conditions.push(eq(questions.topic, input.topic));
       if (input?.subtopic)
         conditions.push(eq(questions.subtopic, input.subtopic));
+      if (input?.difficulty)
+        conditions.push(eq(questions.difficulty, input.difficulty));
 
       const rows = await db
         .select()
@@ -38,16 +41,20 @@ export const questionsRouter = router({
         pageSize: z.number().int().min(1).max(50).default(10),
         topic: z.string().nullish(),
         subtopic: z.string().nullish(),
+        difficulty: z.string().nullish(),
+        sortByProbability: z.boolean().nullish(),
       }),
     )
     .query(async ({ input }) => {
       const db = getDb();
-      const { seed, page, pageSize } = input;
+      const { seed, page, pageSize, sortByProbability } = input;
 
       const conditions = [];
       if (input.topic) conditions.push(eq(questions.topic, input.topic));
       if (input.subtopic)
         conditions.push(eq(questions.subtopic, input.subtopic));
+      if (input.difficulty)
+        conditions.push(eq(questions.difficulty, input.difficulty));
       const whereClause =
         conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -56,13 +63,21 @@ export const questionsRouter = router({
         .from(questions)
         .where(whereClause);
 
-      const rows = await db
+      let query = db
         .select()
         .from(questions)
         .where(whereClause)
-        .orderBy(sql`md5(${questions.id}::text || ${seed}::text)`)
-        .limit(pageSize)
-        .offset(page * pageSize);
+        .$dynamic();
+
+      if (sortByProbability) {
+        query = query.orderBy(desc(questions.probability));
+      } else {
+        query = query.orderBy(
+          sql`md5(${questions.id}::text || ${seed}::text)`
+        );
+      }
+
+      const rows = await query.limit(pageSize).offset(page * pageSize);
 
       const totalCount = Number(total);
       return {
@@ -88,6 +103,41 @@ export const questionsRouter = router({
       .orderBy(questions.topic, questions.subtopic);
     return rows;
   }),
+
+  getDifficulties: publicProcedure
+    .input(
+      z
+        .object({
+          topic: z.string().nullish(),
+          subtopic: z.string().nullish(),
+        })
+        .nullish(),
+    )
+    .query(async ({ input }) => {
+      const db = getDb();
+
+      const conditions = [sql`${questions.difficulty} IS NOT NULL`];
+      if (input?.topic) conditions.push(eq(questions.topic, input.topic));
+      if (input?.subtopic)
+        conditions.push(eq(questions.subtopic, input.subtopic));
+
+      const rows = await db
+        .select({
+          difficulty: questions.difficulty,
+          count: count(),
+        })
+        .from(questions)
+        .where(and(...conditions))
+        .groupBy(questions.difficulty)
+        .orderBy(sql`CASE ${questions.difficulty} 
+          WHEN 'Basic' THEN 1 
+          WHEN 'Intermediate' THEN 2 
+          WHEN 'Advanced' THEN 3 
+          WHEN 'Extreme' THEN 4 
+          ELSE 5 
+        END`);
+      return rows;
+    }),
 
   getActions: publicProcedure.query(async () => {
     const db = getDb();

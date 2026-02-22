@@ -23,13 +23,13 @@ export function ActionBar({
   disabled,
 }: ActionBarProps) {
   return (
-    <div className="absolute bottom-20 left-4 right-4 z-10 flex items-center justify-between gap-2 max-w-md mx-auto">
+    <div className="absolute bottom-14 left-4 right-4 z-10 flex items-center justify-between gap-2 max-w-md mx-auto">
       <Button
         variant="outline"
         size="icon"
         onClick={onPrev}
         disabled={disabled || isFirst}
-        className="h-11 w-11 rounded-full border-muted-foreground/40 text-muted-foreground hover:border-amber-400/60 hover:text-amber-300 hover:bg-amber-500/10"
+        className="h-11 w-11 rounded-full border-muted-foreground/40 text-muted-foreground hover:border-highlight/60 hover:text-highlight hover:bg-highlight/10"
         aria-label="Previous question"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -43,7 +43,7 @@ export function ActionBar({
               size="sm"
               onClick={onSkip}
               disabled={disabled}
-              className="h-11 px-4 rounded-full gap-1.5 border-muted-foreground/40 text-muted-foreground hover:border-amber-400/60 hover:text-amber-300 hover:bg-amber-500/10"
+              className="h-11 px-4 rounded-full gap-1.5 border-muted-foreground/40 text-muted-foreground hover:border-highlight/60 hover:text-highlight hover:bg-highlight/10"
               aria-label="Skip question"
             >
               <SkipForward className="h-4 w-4" />
@@ -54,14 +54,13 @@ export function ActionBar({
           {onArchive && (
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={onArchive}
               disabled={disabled}
-              className="h-11 px-4 rounded-full gap-1.5 border-orange-400/40 bg-orange-500/15 text-orange-300 hover:bg-orange-500/25 hover:border-orange-400/60 hover:text-orange-200"
+              className="h-11 w-11 rounded-full border-warning/40 bg-warning/15 text-warning hover:bg-warning/25 hover:border-warning/60"
               aria-label="Archive question"
             >
               <Archive className="h-4 w-4" />
-              <span className="text-xs font-medium">Archive</span>
             </Button>
           )}
         </div>
@@ -72,7 +71,7 @@ export function ActionBar({
         size="icon"
         onClick={onNext}
         disabled={disabled || isLast}
-        className="h-11 w-11 rounded-full bg-amber-500 text-gray-950 hover:bg-amber-400"
+        className="h-11 w-11 rounded-full bg-highlight text-highlight-foreground hover:bg-highlight/85"
         aria-label="Next question"
       >
         <ChevronRight className="h-5 w-5" />

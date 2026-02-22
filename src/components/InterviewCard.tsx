@@ -48,7 +48,7 @@ function TurnSection({
           className={`p-3 rounded-lg ${
             turn.speaker === "interviewer"
               ? "bg-slate-800/50 border-l-2 border-blue-500/40"
-              : "bg-amber-900/20 border-l-2 border-amber-500/40"
+              : "bg-highlight/10 border-l-2 border-highlight/40"
           }`}
         >
           <div className="flex items-center gap-2 mb-1">
@@ -123,7 +123,6 @@ export function InterviewCard({
           transition={{ type: "spring", stiffness: 400, damping: 32 }}
           className="flex flex-col h-full"
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-1 mb-3">
             <div className="flex items-center gap-1.5 flex-wrap">
               {interview.technologies.slice(0, 4).map((tech) => (
@@ -146,14 +145,11 @@ export function InterviewCard({
             </span>
           </div>
 
-          {/* Title */}
-          <h2 className="text-base font-semibold text-amber-200 mb-2 leading-snug">
+          <h2 className="text-base font-semibold text-highlight mb-2 leading-snug">
             {interview.title}
           </h2>
 
-          {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
-            {/* Context - collapsible */}
             <Collapsible
               open={contextOpen}
               onOpenChange={setContextOpen}
@@ -220,7 +216,6 @@ export function InterviewCard({
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Conversation sections */}
             {sections.includes("intro") && (
               <Collapsible
                 open={introOpen}
@@ -267,7 +262,7 @@ export function InterviewCard({
                 onOpenChange={setTechnicalOpen}
                 className="mb-3"
               >
-                <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-amber-400 hover:text-amber-300 transition-colors w-full">
+                <CollapsibleTrigger className="flex items-center gap-1.5 text-xs font-medium text-highlight hover:text-highlight/80 transition-colors w-full">
                   <ChevronRight
                     className={`h-3.5 w-3.5 transition-transform ${technicalOpen ? "rotate-90" : ""}`}
                   />
@@ -324,7 +319,6 @@ export function InterviewCard({
               </Collapsible>
             )}
 
-            {/* Generated date */}
             {interview.generatedAt && (
               <div className="flex items-center gap-1.5 mt-4 text-[11px] text-muted-foreground/60">
                 <Calendar className="h-3 w-3" />

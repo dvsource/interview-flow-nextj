@@ -1,14 +1,14 @@
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { createSSRHelpers } from "@/server/helpers";
-import InterviewsClient from "./InterviewsClient";
+import QuestionsClient from "./QuestionsClient";
 
-export default async function InterviewsPage() {
+export default async function QuestionsPage() {
   const helpers = createSSRHelpers();
-  await helpers.interviews.getFilters.prefetch();
+  await helpers.questions.getTopics.prefetch();
 
   return (
     <HydrationBoundary state={dehydrate(helpers.queryClient)}>
-      <InterviewsClient />
+      <QuestionsClient />
     </HydrationBoundary>
   );
 }

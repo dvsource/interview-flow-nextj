@@ -25,7 +25,7 @@ export function SimpleNav({
         size="icon"
         onClick={onPrev}
         disabled={disabled || isFirst}
-        className="h-11 w-11 rounded-full border-muted-foreground/40 text-muted-foreground hover:border-amber-400/60 hover:text-amber-300 hover:bg-amber-500/10"
+        className="h-11 w-11 rounded-full border-muted-foreground/40 text-muted-foreground hover:border-highlight/60 hover:text-highlight hover:bg-highlight/10"
         aria-label="Previous"
       >
         <ChevronLeft className="h-5 w-5" />
@@ -36,7 +36,7 @@ export function SimpleNav({
         size="icon"
         onClick={onNext}
         disabled={disabled || isLast}
-        className="h-11 w-11 rounded-full bg-amber-500 text-gray-950 hover:bg-amber-400"
+        className="h-11 w-11 rounded-full bg-highlight text-highlight-foreground hover:bg-highlight/85"
         aria-label="Next"
       >
         <ChevronRight className="h-5 w-5" />

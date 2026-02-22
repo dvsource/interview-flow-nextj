@@ -44,7 +44,7 @@ function SectionItem({
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger
-        className="flex items-center gap-2 text-sm font-medium hover:text-amber-300 transition-colors w-full py-1"
+        className="flex items-center gap-2 text-sm font-medium hover:text-highlight transition-colors w-full py-1"
         style={{ paddingLeft }}
       >
         <ChevronRight
@@ -164,7 +164,6 @@ export function GuideCard({
           transition={{ type: "spring", stiffness: 400, damping: 32 }}
           className="flex flex-col h-full"
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-1 mb-3">
             <div className="flex items-center gap-1.5">
               {guide.techStack && (
@@ -178,14 +177,11 @@ export function GuideCard({
             </span>
           </div>
 
-          {/* Title */}
-          <h2 className="text-base font-semibold text-amber-200 mb-2 leading-snug">
+          <h2 className="text-base font-semibold text-highlight mb-2 leading-snug">
             {guide.title}
           </h2>
 
-          {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto min-h-0 pr-1 scrollbar-thin">
-            {/* Metadata - collapsible */}
             <Collapsible
               open={metaOpen}
               onOpenChange={setMetaOpen}
@@ -222,7 +218,6 @@ export function GuideCard({
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Table of Contents - collapsible */}
             {guide.tableOfContents.length > 0 && (
               <Collapsible
                 open={tocOpen}
@@ -250,10 +245,8 @@ export function GuideCard({
               </Collapsible>
             )}
 
-            {/* Divider */}
             <div className="h-px bg-border mb-4" />
 
-            {/* Sections */}
             {topLevelSections.length > 0 ? (
               <div className="space-y-2">
                 {topLevelSections.map((section) => renderSection(section, 0))}
@@ -264,7 +257,6 @@ export function GuideCard({
               </div>
             )}
 
-            {/* Generated date */}
             {guide.generatedAt && (
               <div className="flex items-center gap-1.5 mt-4 text-[11px] text-muted-foreground/60">
                 <Calendar className="h-3 w-3" />
